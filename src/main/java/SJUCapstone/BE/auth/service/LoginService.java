@@ -70,6 +70,9 @@ public class LoginService {
         user.setGender(registerRequest.getGender());
 
         userRepository.save(user);
+    }
 
+    public boolean checkEmail(String email) {
+        return userRepository.existsByEmail(email);
     }
 }

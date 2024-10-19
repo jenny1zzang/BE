@@ -12,8 +12,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.*;
 
 @Controller
 public class LoginController {
@@ -38,11 +37,17 @@ public class LoginController {
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterRequest registerRequest) {
-        try{
+        try {
             loginService.register(registerRequest);
             return ResponseEntity.status(HttpStatus.CREATED).body("회원가입되었습니다.");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
         }
+    }
+
+    @GetMapping("/check-email")
+    @ResponseBody
+    public Boolean checkEmail(@RequestParam("email") String email) {
+        return loginService.checkEmail(email);
     }
 }
