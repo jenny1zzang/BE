@@ -2,6 +2,7 @@ package SJUCapstone.BE.user.service;
 
 import SJUCapstone.BE.user.domain.User;
 import SJUCapstone.BE.user.domain.UserInfo;
+import SJUCapstone.BE.user.dto.UserUpdateRequest;
 import SJUCapstone.BE.user.repository.UserInfoRepository;
 import SJUCapstone.BE.user.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,5 +31,9 @@ public class UserService {
 
     public boolean checkDuplicateEmail(String email) {
         return userRepository.existsByEmail(email);
+    }
+
+    public void updateUser(Long userId , UserUpdateRequest request) {
+        userRepository.updateUser(userId, request.getName(), request.getAge(), request.getGender());
     }
 }

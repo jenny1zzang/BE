@@ -2,6 +2,7 @@ package SJUCapstone.BE.user.controller;
 
 import SJUCapstone.BE.auth.service.AuthService;
 import SJUCapstone.BE.user.dto.UserInfoResponse;
+import SJUCapstone.BE.user.dto.UserUpdateRequest;
 import SJUCapstone.BE.user.service.UserInfoService;
 import SJUCapstone.BE.user.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -10,6 +11,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 
 @Controller
 public class UserController {
@@ -28,8 +31,19 @@ public class UserController {
             UserInfoResponse response = userInfoService.getUserInfo(userId);
 
             return ResponseEntity.ok(response);
-        } else {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
+        }
+    }
+
+    @PutMapping("/user")
+    public ResponseEntity<?> updateUser(@RequestBody UserUpdateRequest userUpdateRequest, HttpServletRequest httpServletRequest) {
+
+        try {
+            Long userId = authService.getUserId(httpServletRequest);
+            userService.updateUser(userId, userUpdateRequest);
+
+            return ResponseEntity.ok().build();
         } catch (IllegalArgumentException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
         }
