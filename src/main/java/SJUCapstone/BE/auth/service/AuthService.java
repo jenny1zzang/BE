@@ -1,11 +1,16 @@
 package SJUCapstone.BE.auth.service;
 
+import SJUCapstone.BE.auth.domain.Token;
 import SJUCapstone.BE.auth.dto.TokenResponse;
+import SJUCapstone.BE.auth.repository.TokenRepository;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.security.Key;
@@ -16,6 +21,9 @@ import static java.lang.System.getenv;
 
 @Service
 public class AuthService {
+
+    @Autowired
+    TokenRepository tokenRepository;
 
     Map<String, String> env = getenv();
     private final String secretKey = env.get("JWT_SECRET_KEY");
@@ -77,5 +85,24 @@ public class AuthService {
             // 토큰이 유효하지 않은 경우
             return false;
         }
+    }
+
+    public String accessTokenExtractor(HttpServletRequest httpServletRequest) {
+        Cookie[] cookies = httpServletRequest.getCookies();
+        String accessToken = null;
+
+        if (cookies != null) {
+            for (Cookie cookie : cookies) {
+                if ("accessToken".equals(cookie.getName())) {
+                    accessToken = cookie.getValue();
+                    break;
+                }
+            }
+        }
+        return accessToken;
+    }
+
+    public void saveToken(Token token) {
+        tokenRepository.save(token);
     }
 }

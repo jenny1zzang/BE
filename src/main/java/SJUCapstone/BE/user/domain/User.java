@@ -1,5 +1,6 @@
 package SJUCapstone.BE.user.domain;
 
+import SJUCapstone.BE.auth.dto.RegisterRequest;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -31,6 +32,14 @@ public class User {
         this.name = name;
         this.age = age;
         this.gender = gender;
+    }
+
+    public User(RegisterRequest registerRequest) {
+        this.email = registerRequest.getEmail();
+        this.password = registerRequest.getPassword();
+        this.name = registerRequest.getName();
+        this.age = registerRequest.getAge();
+        this.gender = registerRequest.getGender();
     }
 
     public User() {
