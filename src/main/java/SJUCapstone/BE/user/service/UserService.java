@@ -7,12 +7,9 @@ import org.springframework.stereotype.Service;
 
 @Service
 public class UserService {
+
     @Autowired
     UserRepository userRepository;
-
-    UserService(UserRepository userRepository) {
-        this.userRepository = userRepository;
-    }
 
     public User newUser() {
         User user = new User(
