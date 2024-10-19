@@ -23,16 +23,15 @@ public class UserController {
     @GetMapping("/user")
     public ResponseEntity<?> getUserInfo(HttpServletRequest request) {
 
-        String accessToken = authService.accessTokenExtractor(request);
-
-        if (authService.validateToken(accessToken)) {
-            String email = authService.extractEmail(accessToken);
-            Long userId = userService.findByEmail(email).getUserId();
-
+        try {
+            Long userId = authService.getUserId(request);
             UserInfoResponse response = userInfoService.getUserInfo(userId);
+
             return ResponseEntity.ok(response);
         } else {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
         }
     }
 }

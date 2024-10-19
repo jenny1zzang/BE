@@ -3,6 +3,7 @@ package SJUCapstone.BE.auth.service;
 import SJUCapstone.BE.auth.domain.Token;
 import SJUCapstone.BE.auth.dto.TokenResponse;
 import SJUCapstone.BE.auth.repository.TokenRepository;
+import SJUCapstone.BE.user.service.UserService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
@@ -24,6 +25,8 @@ public class AuthService {
 
     @Autowired
     TokenRepository tokenRepository;
+    @Autowired
+    UserService userService;
 
     Map<String, String> env = getenv();
     private final String secretKey = env.get("JWT_SECRET_KEY");
@@ -62,8 +65,19 @@ public class AuthService {
                 .compact();
     }
 
+    public Long getUserId(HttpServletRequest request) {
+        String accessToken = accessTokenExtractor(request);
+
+        if (validateToken(accessToken)) {
+            String email = extractEmail(accessToken);
+            return userService.findByEmail(email).getUserId();
+        }else{
+            throw new IllegalArgumentException("유효하지 않은 토큰입니다.");
+        }
+    }
+
     // JWT 토큰 해독 및 사용자 ID 추출
-    public String extractEmail(String token) {
+    private String extractEmail(String token) {
         Claims claims = Jwts.parser()
                 .setSigningKey(key) // 서명 키 설정
                 .build()
@@ -74,7 +88,7 @@ public class AuthService {
     }
 
     // JWT 토큰 유효성 검증
-    public boolean validateToken(String token) {
+    private boolean validateToken(String token) {
         try {
             Jwts.parser()
                     .setSigningKey(key) // 서명 키 설정
@@ -87,7 +101,7 @@ public class AuthService {
         }
     }
 
-    public String accessTokenExtractor(HttpServletRequest httpServletRequest) {
+    private String accessTokenExtractor(HttpServletRequest httpServletRequest) {
         Cookie[] cookies = httpServletRequest.getCookies();
         String accessToken = null;
 
