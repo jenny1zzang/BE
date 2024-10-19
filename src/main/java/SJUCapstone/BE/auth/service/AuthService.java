@@ -18,7 +18,7 @@ import static java.lang.System.getenv;
 public class AuthService {
 
     Map<String, String> env = getenv();
-    private final String secretKey = env.get("JWT_SECRET_KEY") ;
+    private final String secretKey = env.get("JWT_SECRET_KEY");
 
     private static final long ACCESS_TOKEN_EXPIRATION = 1000 * 60 * 60 * 24; // 1일
     private static final long REFRESH_TOKEN_EXPIRATION = 1000 * 60 * 60 * 24 * 7; // 7일
@@ -31,7 +31,7 @@ public class AuthService {
         String accessToken = generateAccessToken(email);
         String refreshToken = generateRefreshToken(email);
 
-        return new TokenResponse(accessToken,refreshToken);
+        return new TokenResponse(accessToken, refreshToken);
     }
 
     // Access Token 생성
