@@ -6,6 +6,8 @@ import SJUCapstone.BE.auth.exception.InvalidPasswordException;
 import SJUCapstone.BE.auth.exception.UserNotFoundException;
 import SJUCapstone.BE.auth.repository.TokenRepository;
 import SJUCapstone.BE.user.domain.User;
+import SJUCapstone.BE.user.domain.UserInfo;
+import SJUCapstone.BE.user.repository.UserInfoRepository;
 import SJUCapstone.BE.user.repository.UserRepository;
 import jakarta.servlet.http.Cookie;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +18,8 @@ public class LoginService {
 
     @Autowired
     UserRepository userRepository;
+    @Autowired
+    UserInfoRepository userInfoRepository;
     @Autowired
     TokenRepository tokenRepository;
     @Autowired
@@ -70,7 +74,9 @@ public class LoginService {
         user.setGender(registerRequest.getGender());
 
         userRepository.save(user);
+        userInfoRepository.save(new UserInfo(user));
     }
+
 
     public boolean checkEmail(String email) {
         return userRepository.existsByEmail(email);
