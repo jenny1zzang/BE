@@ -1,10 +1,7 @@
 package SJUCapstone.BE.auth.service;
 
 import SJUCapstone.BE.auth.domain.Token;
-import SJUCapstone.BE.auth.dto.LoginRequest;
-import SJUCapstone.BE.auth.dto.LoginResponse;
-import SJUCapstone.BE.auth.dto.ServerLoginResponse;
-import SJUCapstone.BE.auth.dto.TokenResponse;
+import SJUCapstone.BE.auth.dto.*;
 import SJUCapstone.BE.auth.exception.InvalidPasswordException;
 import SJUCapstone.BE.auth.exception.UserNotFoundException;
 import SJUCapstone.BE.auth.repository.TokenRepository;
@@ -62,5 +59,17 @@ public class LoginService {
     private void saveToken(TokenResponse tokens, User user) {
         Token token = new Token(user.getUserId(), tokens.getRefreshToken(), tokens.getAccessToken());
         tokenRepository.save(token);
+    }
+
+    public void register(RegisterRequest registerRequest) {
+        User user = new User();
+        user.setEmail(registerRequest.getEmail());
+        user.setPassword(registerRequest.getPassword());
+        user.setName(registerRequest.getName());
+        user.setAge(registerRequest.getAge());
+        user.setGender(registerRequest.getGender());
+
+        userRepository.save(user);
+
     }
 }
