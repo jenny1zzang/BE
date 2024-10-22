@@ -1,7 +1,6 @@
 package SJUCapstone.BE.user.repository;
 
 import SJUCapstone.BE.user.domain.User;
-import SJUCapstone.BE.user.dto.UserUpdateRequest;
 import jakarta.transaction.Transactional;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;

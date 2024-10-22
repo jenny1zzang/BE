@@ -71,7 +71,7 @@ public class AuthService {
         if (validateToken(accessToken)) {
             String email = extractEmail(accessToken);
             return userService.findByEmail(email).getUserId();
-        }else{
+        } else {
             throw new IllegalArgumentException("유효하지 않은 토큰입니다.");
         }
     }

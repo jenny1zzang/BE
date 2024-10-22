@@ -33,7 +33,7 @@ public class UserService {
         return userRepository.existsByEmail(email);
     }
 
-    public void updateUser(Long userId , UserUpdateRequest request) {
+    public void updateUser(Long userId, UserUpdateRequest request) {
         userRepository.updateUser(userId, request.getName(), request.getAge(), request.getGender());
     }
 }

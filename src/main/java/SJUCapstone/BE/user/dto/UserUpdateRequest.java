@@ -14,5 +14,6 @@ public class UserUpdateRequest {
         this.gender = gender;
     }
 
-    public UserUpdateRequest() {}
+    public UserUpdateRequest() {
+    }
 }
