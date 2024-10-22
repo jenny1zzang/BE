@@ -78,6 +78,7 @@ public class S3ImageService {
             PutObjectRequest putObjectRequest =
                     new PutObjectRequest(bucketName, s3FileName, convertedFile);
             amazonS3.putObject(putObjectRequest); // put image to S3
+            convertedFile.delete();
         } catch (Exception e) {
             throw new S3Exception(ErrorCode.PUT_OBJECT_EXCEPTION);
         } finally {
