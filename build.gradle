@@ -31,8 +31,12 @@ dependencies {
 	//implementation 'org.thymeleaf.extras:thymeleaf-extras-springsecurity6'
 	//jwt
 	implementation 'io.jsonwebtoken:jjwt-api:0.12.5'
+	//S3
+	implementation 'org.springframework.cloud:spring-cloud-starter-aws:2.2.6.RELEASE'
+
 	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.5'
 	runtimeOnly 'com.mysql:mysql-connector-j'
+
 
 	compileOnly 'org.projectlombok:lombok'
 	annotationProcessor 'org.projectlombok:lombok'
