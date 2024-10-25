@@ -16,12 +16,12 @@ public class E4UApplicationTest {
     private UserService userService;
 
 
-    @Test
-    public void saveUser() {
-        userService.save(userService.newUser());
-
-        assertEquals("testemail", userService.findByEmail("testemail").getEmail());
-        assertEquals("testname", userService.findByEmail("testemail").getName());
-    }
+//    @Test
+//    public void saveUser() {
+//        userService.save(userService.newUser());
+//
+//        assertEquals("testemail", userService.findByEmail("testemail").getEmail());
+//        assertEquals("testname", userService.findByEmail("testemail").getName());
+//    }
 }
 

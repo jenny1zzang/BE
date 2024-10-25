@@ -18,6 +18,7 @@ public class DiagnosisService {
     }
 
     public Diagnosis createDiagnoses(Diagnosis diagnosis) {
+        System.out.println(diagnosis.toString());
         return diagnosisRepository.save(diagnosis);
     }
 

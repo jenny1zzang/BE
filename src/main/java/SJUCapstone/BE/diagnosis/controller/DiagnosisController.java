@@ -21,12 +21,12 @@ public class DiagnosisController {
     }
 
     @PostMapping
-    public ResponseEntity<Diagnosis> createDiagnosis(@RequestBody Diagnosis diagnosis, @RequestHeader("Authorization") String authorizationHeader) {
-        String accessToken = extractAccessToken(authorizationHeader);
+    public ResponseEntity<Diagnosis> createDiagnosis(@RequestBody Diagnosis diagnosis) {
+//        String accessToken = extractAccessToken(authorizationHeader);
 
-        if (!isValidToken(accessToken)) {
-            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-        }
+//        if (!isValidToken(accessToken)) {
+//            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
+//        }
 
         Diagnosis createdDiagnosis = diagnosisService.createDiagnoses(diagnosis);
         return ResponseEntity.ok(createdDiagnosis);
