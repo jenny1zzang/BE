@@ -1,7 +1,10 @@
 package SJUCapstone.BE.diagnosis.controller;
 
+import SJUCapstone.BE.auth.service.AuthService;
+import SJUCapstone.BE.diagnosis.exception.DiagnosisNotFoundException;
 import SJUCapstone.BE.diagnosis.model.Diagnosis;
 import SJUCapstone.BE.diagnosis.service.DiagnosisService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,15 +22,11 @@ public class DiagnosisController {
     public DiagnosisController(DiagnosisService diagnosisService) {
         this.diagnosisService = diagnosisService;
     }
+    @Autowired
+    AuthService authService;
 
     @PostMapping
     public ResponseEntity<Diagnosis> createDiagnosis(@RequestBody Diagnosis diagnosis) {
-//        String accessToken = extractAccessToken(authorizationHeader);
-
-//        if (!isValidToken(accessToken)) {
-//            return new ResponseEntity<>(HttpStatus.UNAUTHORIZED);
-//        }
-
         Diagnosis createdDiagnosis = diagnosisService.createDiagnoses(diagnosis);
         return ResponseEntity.ok(createdDiagnosis);
     }
@@ -38,33 +37,38 @@ public class DiagnosisController {
         return ResponseEntity.ok(diagnosisList);
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<Diagnosis> getDiagnosisById(@PathVariable Long id) {
-        Optional<Diagnosis> diagnoses = diagnosisService.getDiagnosesById(id);
-        return diagnoses.map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
-    }
+    @GetMapping("/user")
+    public ResponseEntity<?> getDiagnosisByUserId(HttpServletRequest request) {
+        try {
+            Long userId = authService.getUserId(request);
+            List<Diagnosis> diagnosisList = diagnosisService.getDiagnosesByUserId(userId);
 
-    @GetMapping("/user/{userId}")
-    public ResponseEntity<List<Diagnosis>> getDiagnosisByUserId(@PathVariable Long userId) {
-        List<Diagnosis> diagnosisList = diagnosisService.getDiagnosesByUserId(userId);
-        return ResponseEntity.ok(diagnosisList);
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteDiagnosis(@PathVariable Long id) {
-        diagnosisService.deleteDiagnoses(id);
-        return ResponseEntity.noContent().build();
-    }
-
-    private String extractAccessToken(String authorizationHeader) {
-        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
-            return authorizationHeader.substring(7);
+            return ResponseEntity.ok(diagnosisList);
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
         }
-        return null;
     }
 
-    private boolean isValidToken(String token) {
-        return token != null && !token.isEmpty();
+    @GetMapping("/user/{idx}")
+    public ResponseEntity<Diagnosis> getDiagnosisByUserAndIndex(HttpServletRequest request, @PathVariable int idx) {
+        try {
+            Long userId = authService.getUserId(request);
+            Diagnosis diagnosis = diagnosisService.getDiagnosisByIndex(userId, idx);
+            return ResponseEntity.ok(diagnosis);
+        } catch (DiagnosisNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(null);
+        }
+    }
+
+    @DeleteMapping("/user/{index}")
+    public ResponseEntity<String> deleteDiagnosisByIndex(HttpServletRequest request, @PathVariable int index) {
+        try {
+            Long userId = authService.getUserId(request);
+            Diagnosis diagnosis = diagnosisService.getDiagnosisByIndex(userId, index);
+            diagnosisService.deleteDiagnosisByUserAndIdx(userId, index);
+            return ResponseEntity.ok("Report deleted successfully.");
+        } catch (DiagnosisNotFoundException e){
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Report not found.");
+        }
     }
 }

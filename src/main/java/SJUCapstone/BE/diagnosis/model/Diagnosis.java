@@ -4,6 +4,7 @@ package SJUCapstone.BE.diagnosis.model;
 import io.hypersistence.utils.hibernate.type.json.JsonType;
 import jakarta.persistence.*;
 import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.Type;
 import java.sql.Timestamp;
 import java.util.Map;
@@ -26,6 +27,7 @@ public class Diagnosis {
     @Column(name = "images")
     private Map<String, Object> images; //이미지들
 
+    @CreationTimestamp
     private Timestamp diagnoseDate; //진단 날짜
 
     private String reportScore; //질병 별 확률
