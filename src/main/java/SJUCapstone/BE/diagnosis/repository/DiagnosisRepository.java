@@ -7,9 +7,7 @@ import java.util.List;
 import java.util.Optional;
 
 public interface DiagnosisRepository extends JpaRepository<Diagnosis, Long> {
-    Diagnosis save(Diagnosis diagnosis);
-    List<Diagnosis> findAll();
-    Optional<Diagnosis> findById(Long id);
-    List<Diagnosis> findByUserId(Long userId);
-    void deleteById(Long id);
+//    List<Diagnosis> findByUserId(Long userId);
+    List<Diagnosis> findByUserIdOrderByDiagnoseDateDesc(Long userId);
+    List<Diagnosis> findByUserIdOrderByDiagnoseDateAsc(Long userId);
 }
