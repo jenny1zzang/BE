@@ -6,12 +6,14 @@ import java.sql.Timestamp;
 
 @Getter
 public class UserInfoResponse {
+    private Long userInfoId;
     private Timestamp LastDiagnoseDate;
-    private int LastDiagnoseScore;
+    private String LastDiagnoseScore;
     private String LastDiagnoseStatus;
     private int DiagnoseNum;
 
-    public UserInfoResponse(Timestamp LastDiagnoseDate, int LastDiagnoseScore, String LastDiagnoseStatus, int DiagnoseNum) {
+    public UserInfoResponse(Long userInfoId, Timestamp LastDiagnoseDate, String LastDiagnoseScore, String LastDiagnoseStatus, int DiagnoseNum) {
+        this.userInfoId = userInfoId;
         this.LastDiagnoseDate = LastDiagnoseDate;
         this.LastDiagnoseScore = LastDiagnoseScore;
         this.LastDiagnoseStatus = LastDiagnoseStatus;

@@ -17,11 +17,11 @@ public class UserInfo {
 
     private Long userId;
     private Timestamp LastDiagnoseDate;
-    private int LastDiagnoseScore;
+    private String LastDiagnoseScore;
     private String LastDiagnoseStatus;
     private int DiagnoseNum;
 
-    public UserInfo(Long userId, Timestamp LastDiagnoseDate, int LastDiagnoseScore, String LastDiagnoseStatus, int DiagnoseNum) {
+    public UserInfo(Long userId, Timestamp LastDiagnoseDate, String LastDiagnoseScore, String LastDiagnoseStatus, int DiagnoseNum) {
         this.userId = userId;
         this.LastDiagnoseDate = LastDiagnoseDate;
         this.LastDiagnoseScore = LastDiagnoseScore;

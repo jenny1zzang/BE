@@ -4,6 +4,8 @@ import SJUCapstone.BE.diagnosis.exception.DiagnosisNotFoundException;
 import SJUCapstone.BE.diagnosis.model.Diagnosis;
 import SJUCapstone.BE.diagnosis.repository.DiagnosisRepository;
 import SJUCapstone.BE.user.domain.UserInfo;
+import SJUCapstone.BE.user.dto.UserInfoResponse;
+import SJUCapstone.BE.user.service.UserInfoService;
 import SJUCapstone.BE.user.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -16,13 +18,20 @@ public class DiagnosisService {
     private final DiagnosisRepository diagnosisRepository;
     @Autowired
     UserService userService;
+    @Autowired
+    UserInfoService userInfoService;
 
     @Autowired
     public DiagnosisService(DiagnosisRepository diagnosisRepository){
         this.diagnosisRepository = diagnosisRepository;
     }
 
-    public Diagnosis createDiagnoses(Diagnosis diagnosis) {
+    public Diagnosis createDiagnoses(Diagnosis diagnosis, Long userId) {
+        List<Diagnosis> diagnosisList =diagnosisRepository.findByUserIdOrderByDiagnoseDateAsc(userId);
+        UserInfoResponse userInfo = userInfoService.getUserInfo(userId);
+        System.out.println("diagnosis = " + diagnosis.getReportScore());
+        System.out.println("userInfo.getLastDiagnoseScore() = " + userInfo.getLastDiagnoseScore());
+        userInfoService.updateUser(userInfo.getUserInfoId(), diagnosis, diagnosisList.size());
         return diagnosisRepository.save(diagnosis);
     }
 
@@ -37,6 +46,14 @@ public class DiagnosisService {
 
     public void deleteDiagnosisByUserAndIdx(Long userId, int index) {
         Diagnosis diagnosis = getDiagnosisByIndex(userId, index);
+        System.out.println("diagnosis.getDiagnosisId() = " + diagnosis.getDiagnosisId());
+        List<Diagnosis> diagnosisList =diagnosisRepository.findByUserIdOrderByDiagnoseDateAsc(userId);
+        if (diagnosisList.size() == index) {
+            Diagnosis last_diagnosis = getDiagnosisByIndex(userId, index - 1);
+            System.out.println("last_diagnosis.getDiagnosisId() = " + last_diagnosis.getDiagnosisId());
+            UserInfoResponse userInfo = userInfoService.getUserInfo(userId);
+            userInfoService.updateUser(userInfo.getUserInfoId(), last_diagnosis, diagnosisList.size() - 2);
+        }
         diagnosisRepository.delete(diagnosis);
     }
 
