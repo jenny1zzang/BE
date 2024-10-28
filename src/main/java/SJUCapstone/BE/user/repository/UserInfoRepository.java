@@ -14,8 +14,9 @@ public interface UserInfoRepository extends JpaRepository<UserInfo, Long> {
     Optional<UserInfo> findUserInfoByUserId(Long userId);
 
 
-//    @Modifying
-//    @Transactional
-//    @Query("UPDATE UserInfo u SET u.LastDiagnoseDate = :date, u.LastDiagnoseScore = :score, u.LastDiagnoseStatus = :status, u.DiagnoseNum = :num, u.userInfoId = :id, u.userId = :uid")
-//    int updateUserInfo(@Param("id") Long id, @Param("uid") Long uid, @Param("date") Timestamp date, @Param("score") int Score, @Param("status") String status, @Param("num") int num);
+    @Modifying
+    @Transactional
+    @Query("UPDATE UserInfo u SET u.LastDiagnoseDate = :date, u.LastDiagnoseScore = :score, u.LastDiagnoseStatus = :status, u.DiagnoseNum = :num, u.userId = :uid WHERE u.userInfoId = :id")
+    void updateUserInfo(@Param("date") Timestamp date, @Param("score") String score, @Param("status") String status, @Param("num") int num, @Param("id") Long id, @Param("uid") Long uid);
+    //    void updateUserInfo(@Param("id") Long id, @Param("uid") Long uid, @Param("date") Timestamp date, @Param("score") String Score, @Param("status") String status, @Param("num") int num);
 }
