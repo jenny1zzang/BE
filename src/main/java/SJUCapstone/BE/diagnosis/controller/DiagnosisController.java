@@ -4,6 +4,8 @@ import SJUCapstone.BE.auth.service.AuthService;
 import SJUCapstone.BE.diagnosis.exception.DiagnosisNotFoundException;
 import SJUCapstone.BE.diagnosis.model.Diagnosis;
 import SJUCapstone.BE.diagnosis.service.DiagnosisService;
+import SJUCapstone.BE.user.dto.UserInfoResponse;
+import SJUCapstone.BE.user.service.UserInfoService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -24,11 +26,18 @@ public class DiagnosisController {
     }
     @Autowired
     AuthService authService;
+    @Autowired
+    UserInfoService userInfoService;
 
     @PostMapping
-    public ResponseEntity<Diagnosis> createDiagnosis(@RequestBody Diagnosis diagnosis) {
-        Diagnosis createdDiagnosis = diagnosisService.createDiagnoses(diagnosis);
-        return ResponseEntity.ok(createdDiagnosis);
+    public ResponseEntity<?> createDiagnosis(@RequestBody Diagnosis diagnosis, HttpServletRequest request) {
+        try {
+            Long userId = authService.getUserId(request);
+            Diagnosis createdDiagnosis = diagnosisService.createDiagnoses(diagnosis, userId);
+            return ResponseEntity.ok(createdDiagnosis);
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
+        }
     }
 
     @GetMapping
