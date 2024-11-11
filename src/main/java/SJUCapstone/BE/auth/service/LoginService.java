@@ -37,9 +37,6 @@ public class LoginService {
 
             saveToken(tokens, user);
 
-            System.out.println(cookie);
-            System.out.println(loginResponse);
-
             return new ServerLoginResponse(cookie, loginResponse);
         }
     }
