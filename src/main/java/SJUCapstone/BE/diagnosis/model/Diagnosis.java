@@ -3,9 +3,13 @@ package SJUCapstone.BE.diagnosis.model;
 
 import io.hypersistence.utils.hibernate.type.json.JsonType;
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.Type;
+
 import java.sql.Timestamp;
 import java.util.Map;
 

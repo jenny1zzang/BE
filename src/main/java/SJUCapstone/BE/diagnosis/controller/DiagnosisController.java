@@ -4,7 +4,6 @@ import SJUCapstone.BE.auth.service.AuthService;
 import SJUCapstone.BE.diagnosis.exception.DiagnosisNotFoundException;
 import SJUCapstone.BE.diagnosis.model.Diagnosis;
 import SJUCapstone.BE.diagnosis.service.DiagnosisService;
-import SJUCapstone.BE.user.dto.UserInfoResponse;
 import SJUCapstone.BE.user.service.UserInfoService;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,7 +12,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Optional;
 
 @RestController
 @RequestMapping("/diagnosis")
@@ -24,6 +22,7 @@ public class DiagnosisController {
     public DiagnosisController(DiagnosisService diagnosisService) {
         this.diagnosisService = diagnosisService;
     }
+
     @Autowired
     AuthService authService;
     @Autowired
@@ -76,7 +75,7 @@ public class DiagnosisController {
             Diagnosis diagnosis = diagnosisService.getDiagnosisByIndex(userId, index);
             diagnosisService.deleteDiagnosisByUserAndIdx(userId, index);
             return ResponseEntity.ok("Report deleted successfully.");
-        } catch (DiagnosisNotFoundException e){
+        } catch (DiagnosisNotFoundException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Report not found.");
         }
     }
