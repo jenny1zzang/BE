@@ -48,6 +48,6 @@ public class LoginController {
     @GetMapping("/check-email")
     @ResponseBody
     public Boolean checkEmail(@RequestParam("email") String email) {
-        return loginService.checkEmail(email);
+        return loginService.isEmailAvailable(email);
     }
 }

@@ -62,7 +62,7 @@ public class LoginService {
     }
 
 
-    public boolean checkEmail(String email) {
-        return userService.checkDuplicateEmail(email);
+    public boolean isEmailAvailable(String email) {
+        return !userService.checkDuplicateEmail(email);
     }
 }
