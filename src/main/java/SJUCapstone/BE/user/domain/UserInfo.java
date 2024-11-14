@@ -34,6 +34,7 @@ public class UserInfo {
         this.LastDiagnoseScore = LastDiagnoseScore;
         this.LastDiagnoseStatus = LastDiagnoseStatus;
         this.DiagnoseNum = DiagnoseNum;
+        this.UserName = UserName;
     }
 
     public UserInfo(User user) {
