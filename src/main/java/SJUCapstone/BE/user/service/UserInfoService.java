@@ -29,7 +29,9 @@ public class UserInfoService {
                 userInfo.getLastDiagnoseDate(),
                 userInfo.getLastDiagnoseScore(),
                 userInfo.getLastDiagnoseStatus(),
-                userInfo.getDiagnoseNum());
+                userInfo.getDiagnoseNum(),
+                userInfo.getUserName()
+        );
     }
 
     public void updateUser(Long userInfoId, Diagnosis diagnosis, int num) {
