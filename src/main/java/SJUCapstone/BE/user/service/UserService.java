@@ -1,5 +1,6 @@
 package SJUCapstone.BE.user.service;
 
+import SJUCapstone.BE.auth.exception.UserNotFoundException;
 import SJUCapstone.BE.user.domain.User;
 import SJUCapstone.BE.user.domain.UserInfo;
 import SJUCapstone.BE.user.dto.UserUpdateRequest;
@@ -26,7 +27,7 @@ public class UserService {
 
     public User findByEmail(String email) {
         return userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 회원입니다."));
+                .orElseThrow(() -> new UserNotFoundException("존재하지 않는 회원입니다."));
     }
 
     public boolean checkDuplicateEmail(String email) {

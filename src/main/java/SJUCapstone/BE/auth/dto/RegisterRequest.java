@@ -18,5 +18,6 @@ public class RegisterRequest {
         this.gender = gender;
     }
 
-    public RegisterRequest() {}
+    public RegisterRequest() {
+    }
 }

@@ -20,6 +20,7 @@ public class UserInfo {
     private String LastDiagnoseScore;
     private String LastDiagnoseStatus;
     private int DiagnoseNum;
+    private String UserName;
 
     public UserInfo(Long userId, Timestamp LastDiagnoseDate, String LastDiagnoseScore, String LastDiagnoseStatus, int DiagnoseNum) {
         this.userId = userId;
@@ -27,10 +28,12 @@ public class UserInfo {
         this.LastDiagnoseScore = LastDiagnoseScore;
         this.LastDiagnoseStatus = LastDiagnoseStatus;
         this.DiagnoseNum = DiagnoseNum;
+        this.UserName = UserName;
     }
 
     public UserInfo(User user) {
         this.userId = user.getUserId();
+        this.UserName = user.getName();
     }
 
     public UserInfo() {

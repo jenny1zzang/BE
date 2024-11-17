@@ -31,7 +31,7 @@ public class AuthService {
     Map<String, String> env = getenv();
     private final String secretKey = env.get("JWT_SECRET_KEY");
 
-    private static final long ACCESS_TOKEN_EXPIRATION = 1000 * 60 * 60 * 24; // 1일
+    private static final long ACCESS_TOKEN_EXPIRATION = 1000 * 60 * 60 * 24 * 7; // 7일
     private static final long REFRESH_TOKEN_EXPIRATION = 1000 * 60 * 60 * 24 * 7; // 7일
 
     // JWT 서명에 사용할 Key 객체

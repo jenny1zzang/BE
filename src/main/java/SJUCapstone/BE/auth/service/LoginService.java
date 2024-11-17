@@ -37,9 +37,6 @@ public class LoginService {
 
             saveToken(tokens, user);
 
-            System.out.println(cookie);
-            System.out.println(loginResponse);
-
             return new ServerLoginResponse(cookie, loginResponse);
         }
     }
@@ -65,7 +62,7 @@ public class LoginService {
     }
 
 
-    public boolean checkEmail(String email) {
-        return userService.checkDuplicateEmail(email);
+    public boolean isEmailAvailable(String email) {
+        return !userService.checkDuplicateEmail(email);
     }
 }
