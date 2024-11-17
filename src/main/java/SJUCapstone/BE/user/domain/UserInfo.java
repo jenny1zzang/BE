@@ -22,13 +22,7 @@ public class UserInfo {
     private int DiagnoseNum;
     private String UserName;
 
-    public UserInfo(
-            Long userId,
-            Timestamp LastDiagnoseDate,
-            String LastDiagnoseScore,
-            String LastDiagnoseStatus,
-            int DiagnoseNum,
-            String UserName ) {
+    public UserInfo(Long userId, Timestamp LastDiagnoseDate, String LastDiagnoseScore, String LastDiagnoseStatus, int DiagnoseNum) {
         this.userId = userId;
         this.LastDiagnoseDate = LastDiagnoseDate;
         this.LastDiagnoseScore = LastDiagnoseScore;
