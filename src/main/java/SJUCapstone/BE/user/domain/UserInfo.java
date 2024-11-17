@@ -18,10 +18,10 @@ public class UserInfo {
     private Long userId;
     private Timestamp LastDiagnoseDate;
     private String LastDiagnoseScore;
-    private Long LastDiagnoseStatus;
+    private String LastDiagnoseStatus;
     private int DiagnoseNum;
 
-    public UserInfo(Long userId, Timestamp LastDiagnoseDate, String LastDiagnoseScore, Long LastDiagnoseStatus, int DiagnoseNum) {
+    public UserInfo(Long userId, Timestamp LastDiagnoseDate, String LastDiagnoseScore, String LastDiagnoseStatus, int DiagnoseNum) {
         this.userId = userId;
         this.LastDiagnoseDate = LastDiagnoseDate;
         this.LastDiagnoseScore = LastDiagnoseScore;
