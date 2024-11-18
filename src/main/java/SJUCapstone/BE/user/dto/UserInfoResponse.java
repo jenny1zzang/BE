@@ -9,11 +9,11 @@ public class UserInfoResponse {
     private Long userInfoId;
     private Timestamp LastDiagnoseDate;
     private String LastDiagnoseScore;
-    private String LastDiagnoseStatus;
+    private Long LastDiagnoseStatus;
     private int DiagnoseNum;
     private String UserName;
 
-    public UserInfoResponse(Long userInfoId, Timestamp LastDiagnoseDate, String LastDiagnoseScore, String LastDiagnoseStatus, int DiagnoseNum, String UserName) {
+    public UserInfoResponse(Long userInfoId, Timestamp LastDiagnoseDate, String LastDiagnoseScore, Long LastDiagnoseStatus, int DiagnoseNum, String UserName){
         this.userInfoId = userInfoId;
         this.LastDiagnoseDate = LastDiagnoseDate;
         this.LastDiagnoseScore = LastDiagnoseScore;

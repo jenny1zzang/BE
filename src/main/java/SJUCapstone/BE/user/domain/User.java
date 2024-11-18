@@ -3,9 +3,11 @@ package SJUCapstone.BE.user.domain;
 import SJUCapstone.BE.auth.dto.RegisterRequest;
 import jakarta.persistence.*;
 import lombok.Data;
+import lombok.Getter;
 
 @Entity
 @Data
+@Getter
 public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

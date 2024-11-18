@@ -3,8 +3,10 @@ package SJUCapstone.BE.diagnosis.service;
 import SJUCapstone.BE.diagnosis.exception.DiagnosisNotFoundException;
 import SJUCapstone.BE.diagnosis.model.Diagnosis;
 import SJUCapstone.BE.diagnosis.repository.DiagnosisRepository;
+import SJUCapstone.BE.user.domain.User;
 import SJUCapstone.BE.user.domain.UserInfo;
 import SJUCapstone.BE.user.dto.UserInfoResponse;
+import SJUCapstone.BE.user.repository.UserRepository;
 import SJUCapstone.BE.user.service.UserInfoService;
 import SJUCapstone.BE.user.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,6 +22,9 @@ public class DiagnosisService {
     UserService userService;
     @Autowired
     UserInfoService userInfoService;
+    @Autowired
+    private UserRepository userRepository;
+
 
     @Autowired
     public DiagnosisService(DiagnosisRepository diagnosisRepository){
@@ -27,11 +32,18 @@ public class DiagnosisService {
     }
 
     public Diagnosis createDiagnoses(Diagnosis diagnosis, Long userId) {
+        User user = userRepository.findByUserId(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+        String userName = user.getName();
+
+        diagnosis.setUserId(userId);
+        diagnosis.setUserName(userName);
+
         List<Diagnosis> diagnosisList =diagnosisRepository.findByUserIdOrderByDiagnoseDateAsc(userId);
         UserInfoResponse userInfo = userInfoService.getUserInfo(userId);
-        System.out.println("diagnosis = " + diagnosis.getReportScore());
-        System.out.println("userInfo.getLastDiagnoseScore() = " + userInfo.getLastDiagnoseScore());
+
         userInfoService.updateUser(userInfo.getUserInfoId(), diagnosis, diagnosisList.size());
+
         return diagnosisRepository.save(diagnosis);
     }
 
