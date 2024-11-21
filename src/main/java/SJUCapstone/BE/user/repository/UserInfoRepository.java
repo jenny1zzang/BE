@@ -13,7 +13,6 @@ import java.util.Optional;
 public interface UserInfoRepository extends JpaRepository<UserInfo, Long> {
     Optional<UserInfo> findUserInfoByUserId(Long userId);
 
-
     @Modifying
     @Transactional
     @Query("UPDATE UserInfo u SET u.LastDiagnoseDate = :date, u.LastDiagnoseScore = :score, u.LastDiagnoseStatus = :status, u.DiagnoseNum = :num, u.userId = :uid WHERE u.userInfoId = :id")

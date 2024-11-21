@@ -44,6 +44,7 @@ public class LoginService {
     private Cookie getCookie(TokenResponse tokens) {
         Cookie cookie = new Cookie("accessToken", tokens.getAccessToken());
         cookie.setHttpOnly(true);  // 자바스크립트에서 접근 불가
+        cookie.setSecure(true); // HTTP에서 작동
         cookie.setMaxAge(60 * 60 * 24);  // 1일 동안 유지
         cookie.setPath("/");
         return cookie;

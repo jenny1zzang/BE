@@ -25,6 +25,12 @@ public class LoginController {
             ServerLoginResponse serverLoginResponse = loginService.login(loginRequest);
 
             response.addCookie(serverLoginResponse.getCookie());
+            // SameSite 설정
+            response.addHeader("Set-Cookie",
+                    String.format("%s=%s; Path=/; HttpOnly; Secure; SameSite=None",
+                            serverLoginResponse.getCookie().getName(),
+                            serverLoginResponse.getCookie().getValue()));
+
             LoginResponse loginResponse = serverLoginResponse.getLoginResponse();
 
             return ResponseEntity.ok(loginResponse);
