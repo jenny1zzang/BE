@@ -31,7 +31,7 @@ public class AuthService {
     Map<String, String> env = getenv();
     private final String secretKey = env.get("JWT_SECRET_KEY");
 
-    private static final long ACCESS_TOKEN_EXPIRATION = 1000 * 60 * 60 * 24 * 7; // 7일
+    private static final long ACCESS_TOKEN_EXPIRATION = 1000 * 60 * 60 * 24; // 1일
     private static final long REFRESH_TOKEN_EXPIRATION = 1000 * 60 * 60 * 24 * 7; // 7일
 
     // JWT 서명에 사용할 Key 객체
@@ -72,6 +72,17 @@ public class AuthService {
             String email = extractEmail(accessToken);
             return userService.findByEmail(email).getUserId();
         } else {
+            throw new IllegalArgumentException("유효하지 않은 토큰입니다.");
+        }
+    }
+
+    public String getUserName(HttpServletRequest request) {
+        String accessToken = accessTokenExtractor(request);
+
+        if (validateToken(accessToken)){
+            String email = extractEmail(accessToken);
+            return userService.findByEmail(email).getName();
+        } else{
             throw new IllegalArgumentException("유효하지 않은 토큰입니다.");
         }
     }

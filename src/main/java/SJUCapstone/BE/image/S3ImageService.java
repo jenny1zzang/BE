@@ -35,6 +35,33 @@ public class S3ImageService {
         return this.uploadImage(image);
     }
 
+    public String uploadByteImage(byte[] imageData, String originalFilename) {
+        if (imageData == null || imageData.length == 0 || originalFilename == null || originalFilename.isEmpty()) {
+            throw new S3Exception(ErrorCode.EMPTY_FILE_EXCEPTION);
+        }
+        return this.uploadImage(imageData, originalFilename);
+    }
+
+    // 기존의 uploadImage 메서드 수정 (byte[] 지원)
+    private String uploadImage(byte[] imageData, String originalFilename) {
+        try {
+            // S3 업로드 로직 구현 예시
+            String filePath = "images/" + originalFilename; // 저장 경로 설정
+            InputStream inputStream = new ByteArrayInputStream(imageData);
+
+            // S3 클라이언트로 파일 업로드 수행
+            ObjectMetadata metadata = new ObjectMetadata();
+            metadata.setContentLength(imageData.length);
+            metadata.setContentType("image/jpeg"); // 이미지 타입 설정 (필요에 따라 변경)
+            amazonS3.putObject(bucketName, filePath, inputStream, metadata);
+
+            // 업로드된 파일 URL 반환
+            return amazonS3.getUrl(bucketName, filePath).toString();
+        } catch (Exception e) {
+            throw new S3Exception(ErrorCode.IO_EXCEPTION_ON_IMAGE_UPLOAD);
+        }
+    }
+
     private String uploadImage(MultipartFile image) {
         this.validateImageFileExtention(image.getOriginalFilename());
         try {
