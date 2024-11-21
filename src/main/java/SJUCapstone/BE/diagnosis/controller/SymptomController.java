@@ -2,6 +2,7 @@ package SJUCapstone.BE.diagnosis.controller;
 
 import SJUCapstone.BE.auth.service.AuthService;
 import SJUCapstone.BE.diagnosis.model.Diagnosis;
+import SJUCapstone.BE.diagnosis.model.ImageAnalysisResult;
 import SJUCapstone.BE.diagnosis.model.Symptom;
 import SJUCapstone.BE.diagnosis.repository.SymptomRepository;
 import SJUCapstone.BE.diagnosis.service.ImageAnalysisService;
@@ -16,10 +17,8 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.List;
-import java.util.Map;
+
+import java.util.*;
 
 @RestController
 @RequestMapping("/symptom")
@@ -42,7 +41,7 @@ public class SymptomController {
     @PostMapping(value = "/imageUpload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> uploadAndDiagnoseImages(@RequestParam(name = "file") List<MultipartFile> images, HttpServletRequest request) {
         try {
-            // 모델 서버로 다중 이미지 판별 요청
+            // Step 1: 모델 서버로 다중 이미지 판별 요청
             boolean allMouthImages;
             try {
                 allMouthImages = imageAnalysisService.areMouthImages(images);
@@ -61,47 +60,50 @@ public class SymptomController {
                         ));
             }
 
-            // S3에 이미지 업로드 (각각의 이미지를 업로드하고 URL 리스트를 생성)
+            // Step 2: S3에 원본 이미지 업로드
             List<String> imageUrls = new ArrayList<>();
             for (MultipartFile image : images) {
                 String imageUrl = s3ImageService.upload(image);
                 imageUrls.add(imageUrl);
             }
 
-            // 모델 서버로 다중 이미지 진단 요청 (이미지를 전송하고 응답으로 이미지 수신)
-            List<byte[]> analyzedImages = imageAnalysisService.sendImagesForDetectionAndReceiveImages(images);
-            if (analyzedImages == null || analyzedImages.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to get analyzed images from model server.");
+            // Step 3: 모델 서버로 다중 이미지 진단 요청 (분석된 이미지와 결과를 모두 반환)
+            List<ImageAnalysisResult> analysisResults;
+            try {
+                analysisResults = imageAnalysisService.processImagesAndGetDetectionResults(images);
+            } catch (Exception ex) {
+                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to process images and get detection results.");
             }
 
-            List<String> analyzedImageUrls = new ArrayList<>();
-            try {
-                int index = 0;
-                for (byte[] analyzedImage : analyzedImages) {
+            // Step 4: 분석된 이미지를 S3에 업로드하고 URL 생성
+            List<Map<String, Object>> responseResults = new ArrayList<>();
+            int index = 0;
+
+            for (ImageAnalysisResult analysisResult : analysisResults) {
+                try {
+                    // 분석된 이미지 업로드
+                    byte[] analyzedImage = analysisResult.getAnalyzedImage();
                     String originalFileName = "analyzed_image_" + index + ".jpg";
                     String analyzedImageUrl = s3ImageService.uploadByteImage(analyzedImage, originalFileName);
-                    analyzedImageUrls.add(analyzedImageUrl);
+
+                    // 분석된 이미지 URL과 결과를 저장
+                    Map<String, Object> result = new HashMap<>();
+                    result.put("analyzedImageUrl", analyzedImageUrl);
+                    result.put("detectionResult", analysisResult.getDetectionResult());
+                    responseResults.add(result);
                     index++;
+                } catch (Exception e) {
+                    throw new RuntimeException("Failed to upload analyzed images to S3", e);
                 }
-            } catch (Exception e) {
-                // 업로드 중 예외 처리
-                throw new RuntimeException("Failed to upload analyzed images", e);
             }
 
-            // 모델 서버로부터 진단 결과 받기 (JSON 데이터 수신)
-            List<Map<String, Object>> detectionResult = imageAnalysisService.getDetectionResults(analyzedImages);
-            if (detectionResult == null) {
-                return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to get detection result from model server.");
-            }
-
-            // 세션에 이미지 URL 저장
+            // Step 5: 세션에 원본 이미지 URL 저장
             request.getSession().setAttribute("uploadedImageUrls", imageUrls);
 
-            // 결과와 분석된 이미지 반환 (이미지를 URL로 변환하여 반환)
+            // Step 6: 결과 반환 (원본 이미지 URL, 분석된 이미지 URL 및 결과)
             return ResponseEntity.ok(Map.of(
                     "message", "All images are valid oral images",
-                    "analyzedImages", analyzedImageUrls,
-                    "detectionResult", detectionResult
+                    "analysisResults", responseResults
             ));
 
         } catch (Exception e) {

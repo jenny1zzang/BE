@@ -1,5 +1,6 @@
 package SJUCapstone.BE.diagnosis.service;
 
+import SJUCapstone.BE.diagnosis.model.ImageAnalysisResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
@@ -75,12 +76,54 @@ public class ImageAnalysisService {
         return false;
     }
 
-    public List<byte[]> sendImagesForDetectionAndReceiveImages(List<MultipartFile> images) {
+//    public List<byte[]> sendImagesForDetectionAndReceiveImages(List<MultipartFile> images) {
+//        String detectUrl = "http://222.109.26.240:8000/detect/";
+//        List<byte[]> analyzedImages = new ArrayList<>();
+//
+//        for (MultipartFile image : images) {
+//            try {
+//                HttpHeaders headers = new HttpHeaders();
+//                headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+//
+//                MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+//                byte[] bytes = image.getBytes();
+//                Resource fileResource = new ByteArrayResource(bytes) {
+//                    @Override
+//                    public String getFilename() {
+//                        return image.getOriginalFilename();
+//                    }
+//                };
+//                body.add("file", fileResource);
+//
+//                HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
+//                ResponseEntity<byte[]> response = restTemplate.exchange(detectUrl, HttpMethod.POST, requestEntity, byte[].class);
+//
+//                if (response.getStatusCode() == HttpStatus.OK) {
+//                    analyzedImages.add(response.getBody());
+//                } else {
+//                    System.err.println("Failed to get analyzed image: " + response.getStatusCode());
+//                }
+//            } catch (IOException e) {
+//                System.err.println("IOException occurred while reading the image file: " + e.getMessage());
+//                e.printStackTrace();
+//            } catch (RestClientException e) {
+//                System.err.println("RestTemplate request error: " + e.getMessage());
+//                e.printStackTrace();
+//            }
+//        }
+//
+//        return analyzedImages;
+//    }
+
+    public List<ImageAnalysisResult> processImagesAndGetDetectionResults(List<MultipartFile> images) {
         String detectUrl = "http://222.109.26.240:8000/detect/";
-        List<byte[]> analyzedImages = new ArrayList<>();
+        String detectionResultUrl = "http://222.109.26.240:8000/detection_result/";
+
+        List<ImageAnalysisResult> results = new ArrayList<>();
 
         for (MultipartFile image : images) {
             try {
+                // Step 1: Send image for detection and get analyzed image
                 HttpHeaders headers = new HttpHeaders();
                 headers.setContentType(MediaType.MULTIPART_FORM_DATA);
 
@@ -97,8 +140,26 @@ public class ImageAnalysisService {
                 HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
                 ResponseEntity<byte[]> response = restTemplate.exchange(detectUrl, HttpMethod.POST, requestEntity, byte[].class);
 
-                if (response.getStatusCode() == HttpStatus.OK) {
-                    analyzedImages.add(response.getBody());
+                if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
+                    byte[] analyzedImage = response.getBody();
+
+                    // Step 2: Send analyzed image to detection_result API
+                    HttpHeaders detectionHeaders = new HttpHeaders();
+                    detectionHeaders.setContentType(MediaType.APPLICATION_JSON);
+
+                    HttpEntity<byte[]> detectionRequestEntity = new HttpEntity<>(analyzedImage, detectionHeaders);
+                    ResponseEntity<Map> detectionResponse = restTemplate.postForEntity(detectionResultUrl, detectionRequestEntity, Map.class);
+
+                    if (detectionResponse.getStatusCode() == HttpStatus.OK && detectionResponse.getBody() != null) {
+                        // Create DTO for each image
+                        ImageAnalysisResult analysisResult = new ImageAnalysisResult();
+                        analysisResult.setAnalyzedImage(analyzedImage);
+                        analysisResult.setDetectionResult(detectionResponse.getBody());
+
+                        results.add(analysisResult);
+                    } else {
+                        System.err.println("Failed to get detection result: " + detectionResponse.getStatusCode());
+                    }
                 } else {
                     System.err.println("Failed to get analyzed image: " + response.getStatusCode());
                 }
@@ -111,34 +172,35 @@ public class ImageAnalysisService {
             }
         }
 
-        return analyzedImages;
+        return results;
     }
 
-    public List<Map<String, Object>> getDetectionResults(List<byte[]> analyzedImages) {
-        String detectionResultUrl = "http://222.109.26.240:8000/detection_result/";
-        List<Map<String, Object>> detectionResults = new ArrayList<>();
 
-        try {
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.APPLICATION_JSON);
-
-            for (byte[] analyzedImage : analyzedImages) {
-                // Prepare individual request for each analyzed image
-                HttpEntity<byte[]> requestEntity = new HttpEntity<>(analyzedImage, headers);
-                ResponseEntity<Map> response = restTemplate.postForEntity(detectionResultUrl, requestEntity, Map.class);
-
-                if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
-                    detectionResults.add(response.getBody());
-                } else {
-                    System.err.println("Failed to get detection result for one image: " + response.getStatusCode());
-                }
-            }
-        } catch (RestClientException e) {
-            System.err.println("RestTemplate request error: " + e.getMessage());
-            e.printStackTrace();
-        }
-
-        return detectionResults;
-    }
+//    public List<Map<String, Object>> getDetectionResults(List<byte[]> analyzedImages) {
+//        String detectionResultUrl = "http://222.109.26.240:8000/detection_result/";
+//        List<Map<String, Object>> detectionResults = new ArrayList<>();
+//
+//        try {
+//            HttpHeaders headers = new HttpHeaders();
+//            headers.setContentType(MediaType.APPLICATION_JSON);
+//
+//            for (byte[] analyzedImage : analyzedImages) {
+//                // Prepare individual request for each analyzed image
+//                HttpEntity<byte[]> requestEntity = new HttpEntity<>(analyzedImage, headers);
+//                ResponseEntity<Map> response = restTemplate.postForEntity(detectionResultUrl, requestEntity, Map.class);
+//
+//                if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
+//                    detectionResults.add(response.getBody());
+//                } else {
+//                    System.err.println("Failed to get detection result for one image: " + response.getStatusCode());
+//                }
+//            }
+//        } catch (RestClientException e) {
+//            System.err.println("RestTemplate request error: " + e.getMessage());
+//            e.printStackTrace();
+//        }
+//
+//        return detectionResults;
+//    }
 
 }
