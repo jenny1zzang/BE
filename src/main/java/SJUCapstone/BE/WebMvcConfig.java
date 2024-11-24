@@ -12,7 +12,7 @@ public class WebMvcConfig implements WebMvcConfigurer {
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOrigins("https://localhost:5173","https://localhost:8080","https://e4u.kro.kr","http://localhost:8080")
+                .allowedOrigins("https://localhost:5173","https://localhost:8080","https://e4u.kro.kr","https://e4u-dev.netlify.app")
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
                 .allowedHeaders("*")
                 .exposedHeaders("Set-Cookie")
