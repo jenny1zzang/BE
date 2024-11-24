@@ -1,6 +1,11 @@
 package SJUCapstone.BE.diagnosis.service;
 
-import SJUCapstone.BE.diagnosis.model.ImageAnalysisResult;
+import SJUCapstone.BE.auth.service.AuthService;
+import SJUCapstone.BE.diagnosis.model.Analysis;
+import SJUCapstone.BE.diagnosis.model.AnalysisResult;
+import SJUCapstone.BE.diagnosis.repository.AnalysisRepository;
+import SJUCapstone.BE.image.S3ImageService;
+import SJUCapstone.BE.user.service.UserInfoService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
@@ -14,193 +19,252 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 @Service
 public class ImageAnalysisService {
-    private final RestTemplate restTemplate;
 
+    private static final String MODEL_SERVER_BASE_URL = "http://115.23.175.131:8000";
+
+    private final RestTemplate restTemplate;
     @Autowired
     public ImageAnalysisService(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
     }
 
+    @Autowired
+    AuthService authService;
+    @Autowired
+    UserInfoService userInfoService;
+    @Autowired
+    S3ImageService s3ImageService;
+    @Autowired
+    AnalysisRepository analysisRepository;
+
+    /**
+     * Check if all images are valid oral images.
+     */
     public boolean areMouthImages(List<MultipartFile> images) {
-        // 모델 서버의 /is_mouth/ 엔드포인트 URL 설정
-        String modelServerUrl = "http://222.109.26.240:8000/is_mouth/";
+        String url = MODEL_SERVER_BASE_URL + "/is_mouth/";
 
         try {
-            // 요청을 위한 헤더 설정
-            HttpHeaders headers = new HttpHeaders();
-            headers.setContentType(MediaType.MULTIPART_FORM_DATA);
-
-            // 요청 본문에 MultipartFile 포함하여 전송
-            MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-            for (MultipartFile image : images) {
-                // ByteArrayResource 사용해 파일의 내용을 바이트 배열로 변환
-                byte[] bytes = image.getBytes();
-                Resource fileResource = new ByteArrayResource(bytes) {
-                    @Override
-                    public String getFilename() {
-                        return image.getOriginalFilename();
-                    }
-                };
-                body.add("file", fileResource);
-            }
-
-            HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
-
-            // 모델 서버로 다중 이미지 파일 전송
-            ResponseEntity<Map> response = restTemplate.postForEntity(modelServerUrl, requestEntity, Map.class);
+            HttpEntity<MultiValueMap<String, Object>> requestEntity = createMultipartRequest(images);
+            ResponseEntity<Map> response = restTemplate.exchange(url, HttpMethod.POST, requestEntity, Map.class);
 
             if (response.getStatusCode() == HttpStatus.OK) {
                 Map<String, Object> responseBody = response.getBody();
-                if (responseBody != null) {
-                    // 모델 서버의 응답에서 "is_mouth_image" 필드를 체크
-                    return Boolean.TRUE.equals(responseBody.get("is_mouth_image"));
-                } else {
-                    System.err.println("Response body is null");
-                }
+                return responseBody != null && Boolean.TRUE.equals(responseBody.get("is_mouth_image"));
             } else {
-                System.err.println("Unexpected status code: " + response.getStatusCode());
+                System.err.println("Unexpected status code from is_mouth API: " + response.getStatusCode());
             }
         } catch (IOException e) {
-            System.err.println("IOException occurred while reading the image file: " + e.getMessage());
-            e.printStackTrace();
+            System.err.println("Error reading image file: " + e.getMessage());
         } catch (RestClientException e) {
-            System.err.println("RestTemplate request error: " + e.getMessage());
-            e.printStackTrace();
+            System.err.println("Error calling is_mouth API: " + e.getMessage());
         }
 
         return false;
     }
 
-//    public List<byte[]> sendImagesForDetectionAndReceiveImages(List<MultipartFile> images) {
-//        String detectUrl = "http://222.109.26.240:8000/detect/";
-//        List<byte[]> analyzedImages = new ArrayList<>();
-//
-//        for (MultipartFile image : images) {
-//            try {
-//                HttpHeaders headers = new HttpHeaders();
-//                headers.setContentType(MediaType.MULTIPART_FORM_DATA);
-//
-//                MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-//                byte[] bytes = image.getBytes();
-//                Resource fileResource = new ByteArrayResource(bytes) {
-//                    @Override
-//                    public String getFilename() {
-//                        return image.getOriginalFilename();
-//                    }
-//                };
-//                body.add("file", fileResource);
-//
-//                HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
-//                ResponseEntity<byte[]> response = restTemplate.exchange(detectUrl, HttpMethod.POST, requestEntity, byte[].class);
-//
-//                if (response.getStatusCode() == HttpStatus.OK) {
-//                    analyzedImages.add(response.getBody());
-//                } else {
-//                    System.err.println("Failed to get analyzed image: " + response.getStatusCode());
-//                }
-//            } catch (IOException e) {
-//                System.err.println("IOException occurred while reading the image file: " + e.getMessage());
-//                e.printStackTrace();
-//            } catch (RestClientException e) {
-//                System.err.println("RestTemplate request error: " + e.getMessage());
-//                e.printStackTrace();
-//            }
-//        }
-//
-//        return analyzedImages;
-//    }
-
-    public List<ImageAnalysisResult> processImagesAndGetDetectionResults(List<MultipartFile> images) {
-        String detectUrl = "http://222.109.26.240:8000/detect/";
-        String detectionResultUrl = "http://222.109.26.240:8000/detection_result/";
-
-        List<ImageAnalysisResult> results = new ArrayList<>();
+    /**
+     * Process images and get detection results from the model server.
+     */
+    public List<AnalysisResult> processImagesAndGetDetectionResults(List<MultipartFile> images) {
+        List<AnalysisResult> results = new ArrayList<>();
 
         for (MultipartFile image : images) {
             try {
-                // Step 1: Send image for detection and get analyzed image
-                HttpHeaders headers = new HttpHeaders();
-                headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+                // Step 1: Detect and get analyzed image
+                byte[] analyzedImage = detectImage(image);
 
-                MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-                byte[] bytes = image.getBytes();
-                Resource fileResource = new ByteArrayResource(bytes) {
-                    @Override
-                    public String getFilename() {
-                        return image.getOriginalFilename();
-                    }
-                };
-                body.add("file", fileResource);
+                if (analyzedImage != null) {
+                    // Step 2: Get detection results for the analyzed image
+                    Map<String, Object> detectionResult = getDetectionResult(analyzedImage);
 
-                HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
-                ResponseEntity<byte[]> response = restTemplate.exchange(detectUrl, HttpMethod.POST, requestEntity, byte[].class);
-
-                if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
-                    byte[] analyzedImage = response.getBody();
-
-                    // Step 2: Send analyzed image to detection_result API
-                    HttpHeaders detectionHeaders = new HttpHeaders();
-                    detectionHeaders.setContentType(MediaType.APPLICATION_JSON);
-
-                    HttpEntity<byte[]> detectionRequestEntity = new HttpEntity<>(analyzedImage, detectionHeaders);
-                    ResponseEntity<Map> detectionResponse = restTemplate.postForEntity(detectionResultUrl, detectionRequestEntity, Map.class);
-
-                    if (detectionResponse.getStatusCode() == HttpStatus.OK && detectionResponse.getBody() != null) {
-                        // Create DTO for each image
-                        ImageAnalysisResult analysisResult = new ImageAnalysisResult();
+                    if (detectionResult != null) {
+                        // Create ImageAnalysisResult object
+                        AnalysisResult analysisResult = new AnalysisResult();
                         analysisResult.setAnalyzedImage(analyzedImage);
-                        analysisResult.setDetectionResult(detectionResponse.getBody());
-
+                        analysisResult.setDetectionResult(detectionResult);
                         results.add(analysisResult);
-                    } else {
-                        System.err.println("Failed to get detection result: " + detectionResponse.getStatusCode());
                     }
-                } else {
-                    System.err.println("Failed to get analyzed image: " + response.getStatusCode());
                 }
             } catch (IOException e) {
-                System.err.println("IOException occurred while reading the image file: " + e.getMessage());
-                e.printStackTrace();
+                System.err.println("Error reading image file: " + e.getMessage());
             } catch (RestClientException e) {
-                System.err.println("RestTemplate request error: " + e.getMessage());
-                e.printStackTrace();
+                System.err.println("Error processing image: " + e.getMessage());
             }
         }
 
         return results;
     }
 
+    /**
+     * Detect an image and return the analyzed image as a byte array.
+     */
+    private byte[] detectImage(MultipartFile image) throws IOException {
+        String url = MODEL_SERVER_BASE_URL + "/detect/";
+        HttpEntity<MultiValueMap<String, Object>> requestEntity = createMultipartRequest(List.of(image));
 
-//    public List<Map<String, Object>> getDetectionResults(List<byte[]> analyzedImages) {
-//        String detectionResultUrl = "http://222.109.26.240:8000/detection_result/";
-//        List<Map<String, Object>> detectionResults = new ArrayList<>();
-//
-//        try {
-//            HttpHeaders headers = new HttpHeaders();
-//            headers.setContentType(MediaType.APPLICATION_JSON);
-//
-//            for (byte[] analyzedImage : analyzedImages) {
-//                // Prepare individual request for each analyzed image
-//                HttpEntity<byte[]> requestEntity = new HttpEntity<>(analyzedImage, headers);
-//                ResponseEntity<Map> response = restTemplate.postForEntity(detectionResultUrl, requestEntity, Map.class);
-//
-//                if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
-//                    detectionResults.add(response.getBody());
-//                } else {
-//                    System.err.println("Failed to get detection result for one image: " + response.getStatusCode());
-//                }
-//            }
-//        } catch (RestClientException e) {
-//            System.err.println("RestTemplate request error: " + e.getMessage());
-//            e.printStackTrace();
-//        }
-//
-//        return detectionResults;
-//    }
+        ResponseEntity<byte[]> response = restTemplate.exchange(url, HttpMethod.POST, requestEntity, byte[].class);
 
+        if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
+            return response.getBody();
+        }
+
+        System.err.println("Failed to detect image: " + response.getStatusCode());
+        return null;
+    }
+
+    /**
+     * Get detection results for the analyzed image.
+     */
+    private Map<String, Object> getDetectionResult(byte[] analyzedImage) {
+        String url = MODEL_SERVER_BASE_URL + "/detection_result/";
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        HttpEntity<byte[]> requestEntity = new HttpEntity<>(analyzedImage, headers);
+
+        ResponseEntity<Map> response = restTemplate.postForEntity(url, requestEntity, Map.class);
+
+        if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
+            return response.getBody();
+        }
+
+        System.err.println("Failed to get detection result: " + response.getStatusCode());
+        return null;
+    }
+
+    /**
+     * Create a multipart request entity for a list of images.
+     */
+    private HttpEntity<MultiValueMap<String, Object>> createMultipartRequest(List<MultipartFile> images) throws IOException {
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        for (MultipartFile image : images) {
+            Resource fileResource = new ByteArrayResource(image.getBytes()) {
+                @Override
+                public String getFilename() {
+                    return image.getOriginalFilename();
+                }
+            };
+            body.add("file", fileResource);
+        }
+
+        return new HttpEntity<>(body, headers);
+    }
+
+    /**
+     * Send combined results to the model server.
+     */
+    public String sendCombinedResultsToModelServer(Map<String, Object> combinedResults) {
+        String url = MODEL_SERVER_BASE_URL + "/result_report/";
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(combinedResults, headers);
+
+        try {
+            ResponseEntity<String> response = restTemplate.postForEntity(url, requestEntity, String.class);
+            if (response.getStatusCode() == HttpStatus.OK) {
+                return response.getBody();
+            } else {
+                System.err.println("Failed to send combined results to model server: " + response.getStatusCode());
+            }
+        } catch (RestClientException e) {
+            System.err.println("Error calling submit_results API: " + e.getMessage());
+        }
+
+        return null;
+    }
+    /**
+     * Upload and analyze images, and return the combined results.
+     */
+    public Map<String, Object> uploadAndAnalyzeImages(List<MultipartFile> images, Long userId) throws IOException {
+        List<String> imageUrls = new ArrayList<>();
+        List<AnalysisResult> analysisResults = processImagesAndGetDetectionResults(images);
+
+        // S3에 원본 이미지 업로드
+        for (MultipartFile image : images) {
+            String imageUrl = s3ImageService.upload(image);
+            imageUrls.add(imageUrl);
+        }
+
+        Map<String, Object> combinedResults = new HashMap<>();
+        Map<String, Object> combinedToothDiseases = new HashMap<>();
+        Map<String, Object> combinedGumDiseases = new HashMap<>();
+        List<String> analyzedImageUrls = new ArrayList<>();
+
+        for (AnalysisResult analysisResult : analysisResults) {
+            byte[] analyzedImage = analysisResult.getAnalyzedImage();
+            String originalFileName = "analyzed_image_" + analyzedImageUrls.size() + ".jpg";
+            String analyzedImageUrl = s3ImageService.uploadByteImage(analyzedImage, originalFileName);
+            analyzedImageUrls.add(analyzedImageUrl);
+
+            // 치아 질병 결과 병합
+            Map<String, Object> detectionResult = analysisResult.getDetectionResult();
+            if (detectionResult.containsKey("tooth_diseases")) {
+                mergeDiseaseResults((Map<String, Object>) detectionResult.get("tooth_diseases"), combinedToothDiseases);
+            }
+            if (detectionResult.containsKey("gum_diseases")) {
+                mergeDiseaseResults((Map<String, Object>) detectionResult.get("gum_diseases"), combinedGumDiseases);
+            }
+        }
+
+        combinedResults.put("tooth_diseases", combinedToothDiseases);
+        combinedResults.put("gum_diseases", combinedGumDiseases);
+        combinedResults.put("analyzedImageUrls", analyzedImageUrls);
+//        combinedResults.put("originalImageUrls", imageUrls);
+        combinedResults.put("message", "All images are valid oral images");
+
+        return combinedResults;
+    }
+
+    /**
+     * Save analysis result to the database.
+     */
+    public void saveAnalysisResult(Long userId, Map<String, Object> combinedResults) {
+        Map<String, Object> combinedToothDiseases = (Map<String, Object>) combinedResults.get("tooth_diseases");
+        Map<String, Object> combinedGumDiseases = (Map<String, Object>) combinedResults.get("gum_diseases");
+        List<String> analyzedImageUrls = (List<String>) combinedResults.get("analyzedImageUrls");
+
+        Analysis existingAnalysis = analysisRepository.findByUserId(userId);
+        if (existingAnalysis != null) {
+            existingAnalysis.setToothDiseases(combinedToothDiseases);
+            existingAnalysis.setGumDiseases(combinedGumDiseases);
+            existingAnalysis.setAnalyzedImageUrls(analyzedImageUrls);
+            analysisRepository.save(existingAnalysis);
+        } else {
+            Analysis analysis = new Analysis();
+            analysis.setToothDiseases(combinedToothDiseases);
+            analysis.setAnalyzedImageUrls(analyzedImageUrls);
+            analysis.setGumDiseases(combinedGumDiseases);
+            analysis.setUserId(userId);
+            analysisRepository.save(analysis);
+        }
+    }
+
+    private void mergeDiseaseResults(Map<String, Object> source, Map<String, Object> target) {
+        source.forEach((key, value) -> {
+            List<Map<String, Object>> diseasesList = (List<Map<String, Object>>) value;
+            List<Map<String, Object>> filteredList = new ArrayList<>();
+            for (Map<String, Object> disease : diseasesList) {
+                Map<String, Object> filteredDisease = new HashMap<>(disease);
+                filteredDisease.remove("disease_id");
+                filteredList.add(filteredDisease);
+            }
+
+            if (!target.containsKey(key)) {
+                target.put(key, filteredList);
+            } else {
+                List<Map<String, Object>> existingList = (List<Map<String, Object>>) target.get(key);
+                existingList.addAll(filteredList);
+            }
+        });
+    }
 }
