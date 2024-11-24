@@ -2,7 +2,8 @@ package SJUCapstone.BE.diagnosis.model;
 
 import java.util.Map;
 
-public class ImageAnalysisResult {
+
+public class AnalysisResult {
     private byte[] analyzedImage;
     private Map<String, Object> detectionResult;
 
