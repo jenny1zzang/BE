@@ -29,26 +29,18 @@ public class Diagnosis {
     @Schema(hidden = true)
     private String userName; // 회원 이름
 
+
     @Type(JsonType.class)
-    @Column(name = "images")
-    private Map<String, Object> images; //이미지들
+    @Column(columnDefinition = "JSON")
+    private List<String> analyzedImageUrls;
 
     @CreationTimestamp
     @Schema(hidden = true)
     private Timestamp diagnoseDate; //진단 날짜
 
-    private String reportScore; //질병 별 확률
-    private Long status; // 진단 정보( 전체 점수 )
 
-    @Lob
-    @Type(JsonType.class)
-    private List<String> recommendation; //관리 권장 사항
-
-    @Lob
-    @Type(JsonType.class)
-    private List<String> diagnoseCondition; //진단 질병 명
-
-    @Lob
-    @Type(JsonType.class)
-    private List<String> description; //질병 설명
+    private String result;
+    private String detailed_result;
+    private String care_method;
+    private Integer dangerPoint;
 }

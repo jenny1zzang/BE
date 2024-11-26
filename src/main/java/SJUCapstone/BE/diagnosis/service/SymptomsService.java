@@ -28,7 +28,7 @@ public class SymptomsService {
     }
 
     public Symptom createSymptom(Long userId, String userName, Long painLevel, List<String> symptomText,
-                                 List<String> symptomArea, List<String> imageUrls) {
+                                 List<String> symptomArea) {
 
         Symptom symptom = Symptom.builder()
                 .userId(userId)
@@ -36,7 +36,6 @@ public class SymptomsService {
                 .painLevel(painLevel)
                 .symptomText(symptomText)
                 .symptomArea(symptomArea)
-                .imagePaths(imageUrls)
                 .build();
 
         return symptomRepository.save(symptom);

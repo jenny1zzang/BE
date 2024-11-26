@@ -17,16 +17,16 @@ public class UserInfo {
 
     private Long userId;
     private Timestamp LastDiagnoseDate;
-    private String LastDiagnoseScore;
-    private Long LastDiagnoseStatus;
+    private Integer LastDiagnoseScore;
+//    private Long LastDiagnoseStatus;
     private int DiagnoseNum;
     private String UserName;
 
-    public UserInfo(Long userId, Timestamp LastDiagnoseDate, String LastDiagnoseScore, Long LastDiagnoseStatus, int DiagnoseNum, String UserName) {
+    public UserInfo(Long userId, Timestamp LastDiagnoseDate, Integer LastDiagnoseScore, int DiagnoseNum, String UserName) {
         this.userId = userId;
         this.LastDiagnoseDate = LastDiagnoseDate;
         this.LastDiagnoseScore = LastDiagnoseScore;
-        this.LastDiagnoseStatus = LastDiagnoseStatus;
+//        this.LastDiagnoseStatus = LastDiagnoseStatus;
         this.DiagnoseNum = DiagnoseNum;
         this.UserName = UserName;
     }

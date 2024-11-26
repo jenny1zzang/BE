@@ -1,12 +1,14 @@
 package SJUCapstone.BE.diagnosis.model;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import io.hypersistence.utils.hibernate.type.json.JsonType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.*;
-import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.Type;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -22,13 +24,16 @@ public class Analysis {
     @Schema(hidden = true)
     private Long userId; //회원키
 
+    @Type(JsonType.class)
     @Column(columnDefinition = "JSON")
     private String toothDiseases;
 
+    @Type(JsonType.class)
     @Column(columnDefinition = "JSON")
     private String gumDiseases;
 
 
+    @Type(JsonType.class)
     @Column(columnDefinition = "JSON")
     private String analyzedImageUrls;
 
@@ -66,10 +71,14 @@ public class Analysis {
     }
 
     public List<String> getAnalyzedImageUrls() {
+        if (analyzedImageUrls == null || analyzedImageUrls.isEmpty()) {
+            return new ArrayList<>();
+        }
         try {
-            return new ObjectMapper().readValue(analyzedImageUrls, List.class);
+            ObjectMapper objectMapper = new ObjectMapper();
+            return objectMapper.readValue(analyzedImageUrls, objectMapper.getTypeFactory().constructCollectionType(List.class, String.class));
         } catch (IOException e) {
-            throw new RuntimeException("Failed to convert JSON to analyzedImageUrls", e);
+            throw new RuntimeException("Failed to convert JSON to List of analyzedImageUrls", e);
         }
     }
 

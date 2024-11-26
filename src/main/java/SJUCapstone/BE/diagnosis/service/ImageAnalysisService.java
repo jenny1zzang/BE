@@ -18,15 +18,12 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Service
 public class ImageAnalysisService {
 
-    private static final String MODEL_SERVER_BASE_URL = "http://115.23.175.131:8000";
+    private static final String MODEL_SERVER_BASE_URL = "http://222.109.26.240:8000";
 
     private final RestTemplate restTemplate;
     @Autowired
@@ -138,6 +135,27 @@ public class ImageAnalysisService {
         return null;
     }
 
+    public Integer getDetectionPoint(int painLevel) {
+        String url = MODEL_SERVER_BASE_URL + "/danger_point/?pain_level=" + painLevel;
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        HttpEntity<Void> requestEntity = new HttpEntity<>(headers);
+
+        try {
+            ResponseEntity<Map> response = restTemplate.postForEntity(url, requestEntity, Map.class);
+            if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
+                Map<String, Integer> responseBody = response.getBody();
+                if (responseBody.containsKey("danger_point")) {
+                    return responseBody.get("danger_point");
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Failed to get detection result: " + e.getMessage());
+        }
+        return 0;
+    }
+
     /**
      * Create a multipart request entity for a list of images.
      */
@@ -202,7 +220,7 @@ public class ImageAnalysisService {
 
         for (AnalysisResult analysisResult : analysisResults) {
             byte[] analyzedImage = analysisResult.getAnalyzedImage();
-            String originalFileName = "analyzed_image_" + analyzedImageUrls.size() + ".jpg";
+            String originalFileName = "analyzed_image_" + UUID.randomUUID() + ".jpg";
             String analyzedImageUrl = s3ImageService.uploadByteImage(analyzedImage, originalFileName);
             analyzedImageUrls.add(analyzedImageUrl);
 

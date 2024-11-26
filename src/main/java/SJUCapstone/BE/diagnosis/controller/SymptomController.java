@@ -4,12 +4,15 @@ import SJUCapstone.BE.WebMvcConfig;
 import SJUCapstone.BE.auth.service.AuthService;
 import SJUCapstone.BE.diagnosis.model.Analysis;
 import SJUCapstone.BE.diagnosis.model.AnalysisResult;
+import SJUCapstone.BE.diagnosis.model.Diagnosis;
 import SJUCapstone.BE.diagnosis.model.Symptom;
 import SJUCapstone.BE.diagnosis.repository.AnalysisRepository;
+import SJUCapstone.BE.diagnosis.service.DiagnosisService;
 import SJUCapstone.BE.diagnosis.service.ImageAnalysisService;
 import SJUCapstone.BE.diagnosis.service.SymptomsService;
 import SJUCapstone.BE.image.S3ImageService;
 import SJUCapstone.BE.user.service.UserInfoService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,8 +28,8 @@ import java.util.*;
 public class SymptomController {
     @Autowired
     AuthService authService;
-    @Autowired
-    UserInfoService userInfoService;
+//    @Autowired
+//    UserInfoService userInfoService;
     @Autowired
     S3ImageService s3ImageService;
     @Autowired
@@ -35,6 +38,8 @@ public class SymptomController {
     AnalysisRepository analysisRepository;
     @Autowired
     SymptomsService symptomsService;
+    @Autowired
+    DiagnosisService diagnosisService;
 
     @PostMapping(value = "/imageUpload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> uploadAndDiagnoseImages(@RequestParam(name = "file") List<MultipartFile> images, HttpServletRequest request) {
@@ -83,10 +88,10 @@ public class SymptomController {
             // 사용자 ID 및 이름 가져오기
             Long userId = authService.getUserId(request);
             String userName = authService.getUserName(request);
-
+            System.out.println("userId = " + userId);
             // Symptom 생성 및 저장
-            Symptom symptom = symptomsService.createSymptom(userId, userName, painLevel, symptomText, symptomArea, imageUrls);
-
+            Symptom symptom = symptomsService.createSymptom(userId, userName, painLevel, symptomText, symptomArea);
+            // painLevel을 이용해 dangerPoint 계산
             Analysis existingDiagnosis = analysisRepository.findByUserId(userId);
             if (existingDiagnosis == null) {
                 return ResponseEntity.badRequest().body("No diagnosis found for user. Please upload images first.");
@@ -103,14 +108,52 @@ public class SymptomController {
 
             // 모델 서버로 combinedResults 전송
             String responseFromModelServer = imageAnalysisService.sendCombinedResultsToModelServer(combinedResults);
-
+            Diagnosis diagnosis = new Diagnosis();
             if (responseFromModelServer != null) {
-                return ResponseEntity.ok(responseFromModelServer);
+                // 서버 응답 파싱 및 데이터베이스 저장
+                Map<String, Object> responseMap = parseResponse(responseFromModelServer);
+                if (responseMap != null) {
+                    diagnosis.setResult((String) responseMap.get("result"));
+                    diagnosis.setDetailed_result((String) responseMap.get("detailed_result"));
+                    diagnosis.setCare_method((String) responseMap.get("care_method"));
+                    diagnosis.setAnalyzedImageUrls(existingDiagnosis.getAnalyzedImageUrls());
+
+                    Integer dangerPoint = imageAnalysisService.getDetectionPoint(painLevel.intValue());
+                    diagnosis.setDangerPoint(dangerPoint);
+                    diagnosisService.createDiagnoses(diagnosis, userId);
+                }
+                List<Diagnosis> diagnosisList = diagnosisService.getDiagnosesByUserId(userId);
+                int diagnosisIndex = diagnosisList.size();
+                return ResponseEntity.ok(Map.of("diagnosisId", diagnosisIndex));
             } else {
                 return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to send data to model server.");
             }
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to save symptom: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/toothDiseases")
+    public ResponseEntity<?> getToothDiseasesFromAnalysis(HttpServletRequest request) {
+        try {
+            Long userId = authService.getUserId(request);
+            Analysis analysis = analysisRepository.findByUserId(userId);
+            if (analysis == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No analysis found for user.");
+            }
+            return ResponseEntity.ok(analysis.getToothDiseases());
+        } catch (IllegalStateException e) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
+        }
+    }
+
+    private Map<String, Object> parseResponse(String response) {
+        try {
+            ObjectMapper objectMapper = new ObjectMapper();
+            return objectMapper.readValue(response, Map.class);
+        } catch (Exception e) {
+            System.err.println("Failed to parse response: " + e.getMessage());
+            return null;
         }
     }
 }
