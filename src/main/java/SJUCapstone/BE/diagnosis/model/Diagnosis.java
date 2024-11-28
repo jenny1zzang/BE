@@ -29,6 +29,8 @@ public class Diagnosis {
     @Schema(hidden = true)
     private String userName; // 회원 이름
 
+    @Type(JsonType.class)
+    private List<String> detectedDiseases;
 
     @Type(JsonType.class)
     @Column(columnDefinition = "JSON")
