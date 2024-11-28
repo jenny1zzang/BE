@@ -324,10 +324,10 @@ public class ImageAnalysisService {
 
         Map<String, Object> combinedResults = new HashMap<>();
         combinedResults.put("analyzedImageUrl", analyzedImageUrl);
-        combinedResults.put("originalImageUrl", imageUrl);
+//        combinedResults.put("originalImageUrl", imageUrl);
         combinedResults.put("tooth_diseases", analysisResult.getDetectionResult().get("tooth_diseases"));
         combinedResults.put("gum_diseases", analysisResult.getDetectionResult().get("gum_diseases"));
-        combinedResults.put("message", "Image is a valid oral image");
+        combinedResults.put("message", "All images are valid oral images");
 
         return combinedResults;
     }
