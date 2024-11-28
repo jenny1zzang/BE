@@ -20,6 +20,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @RestController
 @RequestMapping("/symptom")
@@ -167,6 +168,7 @@ public class SymptomController {
 
     private List<String> parsingDisease(Analysis existingDiagnosis) {
         Map<String, Object> toothDiseases = existingDiagnosis.getToothDiseases();
+        Map<String, Object> gumDiseases = existingDiagnosis.getGumDiseases();
 
 
         // 영어 -> 한글 매핑
@@ -183,15 +185,22 @@ public class SymptomController {
         diseaseNameMapping.put("OLP", "구강 편평태선");
         diseaseNameMapping.put("Tooth Discoloration", "치아변색");
 
+        List<String> combinedTranslatedDiseaseNames = Stream.concat(
+                extractAndTranslateDiseaseNames(toothDiseases, diseaseNameMapping).stream(),
+                extractAndTranslateDiseaseNames(gumDiseases, diseaseNameMapping).stream()
+        ).distinct().collect(Collectors.toList());
 
-        return
-                toothDiseases.values().stream()
-                        .flatMap(value -> ((List<Map<String, Object>>) value).stream())
-                        .map(disease -> (String) disease.get("disease_name")) // 영어 이름 추출
-                        .distinct()
-                        .map(diseaseNameMapping::get) // 한글로 변환
-                        .filter(Objects::nonNull) // 매핑이 없는 경우 제외
-                        .collect(Collectors.toList());
+        return combinedTranslatedDiseaseNames;
+    }
+
+    private static List<String> extractAndTranslateDiseaseNames(Map<String, Object> diseases, Map<String, String> mapping) {
+        return diseases.values().stream()
+                .flatMap(value -> ((List<Map<String, Object>>) value).stream())
+                .map(disease -> (String) disease.get("disease_name")) // 영어 이름 추출
+                .distinct()
+                .map(mapping::get) // 한글로 변환
+                .filter(Objects::nonNull) // 매핑이 없는 경우 제외
+                .collect(Collectors.toList());
     }
 
     @GetMapping("/toothDiseases")
