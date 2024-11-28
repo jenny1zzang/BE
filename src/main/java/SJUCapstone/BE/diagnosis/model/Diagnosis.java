@@ -42,5 +42,5 @@ public class Diagnosis {
     private String result;
     private String detailed_result;
     private String care_method;
-    private Integer dangerPoint;
+    private int dangerPoint;
 }

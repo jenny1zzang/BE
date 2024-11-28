@@ -38,6 +38,18 @@ public class Analysis {
     private String analyzedImageUrls;
 
 
+    @Schema(hidden = true)
+    private boolean isComplete = false;
+
+    // getter와 setter 추가
+    public boolean isComplete() {
+        return isComplete;
+    }
+
+    public void setComplete(boolean complete) {
+        isComplete = complete;
+    }
+
     public Map<String, Object> getToothDiseases() {
         try {
             return new ObjectMapper().readValue(toothDiseases, Map.class);
