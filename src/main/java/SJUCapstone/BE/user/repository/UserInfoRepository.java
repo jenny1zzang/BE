@@ -15,7 +15,7 @@ public interface UserInfoRepository extends JpaRepository<UserInfo, Long> {
 
     @Modifying
     @Transactional
-    @Query("UPDATE UserInfo u SET u.LastDiagnoseDate = :date, u.LastDiagnoseScore = :score, u.LastDiagnoseStatus = :status, u.DiagnoseNum = :num, u.userId = :uid WHERE u.userInfoId = :id")
-    void updateUserInfo(@Param("date") Timestamp date, @Param("score") String score, @Param("status") Long status, @Param("num") int num, @Param("id") Long id, @Param("uid") Long uid);
+    @Query("UPDATE UserInfo u SET u.LastDiagnoseDate = :date, u.LastDiagnoseScore = :score, u.DiagnoseNum = :num, u.userId = :uid WHERE u.userInfoId = :id")
+    void updateUserInfo(@Param("date") Timestamp date, @Param("score") int score, @Param("num") int num, @Param("id") Long id, @Param("uid") Long uid);
     //    void updateUserInfo(@Param("id") Long id, @Param("uid") Long uid, @Param("date") Timestamp date, @Param("score") String Score, @Param("status") String status, @Param("num") int num);
 }

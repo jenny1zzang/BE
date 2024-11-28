@@ -64,7 +64,7 @@ public class DiagnosisService {
             Diagnosis last_diagnosis = getDiagnosisByIndex(userId, index - 1);
             System.out.println("last_diagnosis.getDiagnosisId() = " + last_diagnosis.getDiagnosisId());
             UserInfoResponse userInfo = userInfoService.getUserInfo(userId);
-            userInfoService.updateUser(userInfo.getUserInfoId(), last_diagnosis, diagnosisList.size() - 2);
+//            userInfoService.updateUser(userInfo.getUserInfoId(), last_diagnosis, diagnosisList.size() - 2);
         }
         diagnosisRepository.delete(diagnosis);
     }

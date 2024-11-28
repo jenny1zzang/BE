@@ -27,10 +27,10 @@ public class Symptom {
     private String userName;
 
 
-    @Schema(hidden = true)
-    @Type(JsonType.class)
-    @Column(name = "imagePaths", columnDefinition = "json")
-    private List<String> imagePaths; // S3 URL들을 저장하는 리스트
+//    @Schema(hidden = true)
+//    @Type(JsonType.class)
+//    @Column(name = "imagePaths", columnDefinition = "json")
+//    private List<String> imagePaths; // S3 URL들을 저장하는 리스트
 
     private Long painLevel;
 

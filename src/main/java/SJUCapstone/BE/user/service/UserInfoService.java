@@ -28,7 +28,6 @@ public class UserInfoService {
                 userInfo.getUserInfoId(),
                 userInfo.getLastDiagnoseDate(),
                 userInfo.getLastDiagnoseScore(),
-                userInfo.getLastDiagnoseStatus(),
                 userInfo.getDiagnoseNum(),
                 userInfo.getUserName()
         );
@@ -36,9 +35,9 @@ public class UserInfoService {
 
     public void updateUser(Long userInfoId, Diagnosis diagnosis, int num) {
         if (diagnosis.getDiagnoseDate() == null) {
-            userInfoRepository.updateUserInfo(Timestamp.valueOf(LocalDateTime.now()), diagnosis.getReportScore(), diagnosis.getStatus(), num + 1, userInfoId, diagnosis.getUserId());
+            userInfoRepository.updateUserInfo(Timestamp.valueOf(LocalDateTime.now()), diagnosis.getDangerPoint(), num + 1, userInfoId, diagnosis.getUserId());
         } else {
-            userInfoRepository.updateUserInfo(diagnosis.getDiagnoseDate(), diagnosis.getReportScore(), diagnosis.getStatus(), num + 1, userInfoId, diagnosis.getUserId());
+            userInfoRepository.updateUserInfo(diagnosis.getDiagnoseDate(), diagnosis.getDangerPoint(), num + 1, userInfoId, diagnosis.getUserId());
         }
 
     }
