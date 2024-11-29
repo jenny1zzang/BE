@@ -39,10 +39,10 @@ public class DiagnosisService {
         diagnosis.setUserId(userId);
         diagnosis.setUserName(userName);
 
-        List<Diagnosis> diagnosisList =diagnosisRepository.findByUserIdOrderByDiagnoseDateAsc(userId);
+        int diagnoseNumber = diagnosisRepository.findByUserIdOrderByDiagnoseDateAsc(userId).size();
         UserInfoResponse userInfo = userInfoService.getUserInfo(userId);
 
-        userInfoService.updateUser(userInfo.getUserInfoId(), diagnosis, diagnosisList.size());
+        userInfoService.updateUser(userInfo.getUserInfoId(), diagnosis, diagnoseNumber);
 
         return diagnosisRepository.save(diagnosis);
     }
