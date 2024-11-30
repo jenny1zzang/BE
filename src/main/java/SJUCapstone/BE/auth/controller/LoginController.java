@@ -46,18 +46,4 @@ public class LoginController {
     public Boolean checkEmail(@RequestParam("email") String email) {
         return loginService.isEmailAvailable(email);
     }
-
-    @PostMapping("/logout")
-    public ResponseEntity<?> logout(HttpServletResponse response) {
-        // "accessToken" 쿠키를 찾아서 삭제
-        response.addCookie(loginService.logout());
-
-        response.addHeader("Set-Cookie",
-                String.format("%s=%s; Path=/; HttpOnly; Secure; SameSite=None",
-                        "accessToken",
-                        null));
-        return ResponseEntity.noContent().build();
-        // 필요한 경우, 서버에서 추가적인 처리 (예: accessToken 무효화)
-        // 예: tokenService.invalidateToken(accessToken);
-    }
 }
