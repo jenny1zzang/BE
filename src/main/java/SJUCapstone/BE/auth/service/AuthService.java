@@ -66,7 +66,7 @@ public class AuthService {
     }
 
     public Long getUserId(HttpServletRequest request) {
-        String accessToken = accessTokenExtractor(request);
+        String accessToken = request.getHeader("Authorization");
 
         if (validateToken(accessToken)) {
             String email = extractEmail(accessToken);
