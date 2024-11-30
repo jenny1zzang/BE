@@ -18,10 +18,9 @@ public class LoginService {
     @Autowired
     AuthService authService;
 
-    public LoginService() {
-    }
+    public LoginService() {}
 
-    public ServerLoginResponse login(LoginRequest loginRequest) {
+    public LoginResponse login(LoginRequest loginRequest) {
         String email = loginRequest.getEmail();
         String password = loginRequest.getPassword();
 
@@ -31,13 +30,9 @@ public class LoginService {
             throw new InvalidPasswordException("비밀번호가 일치하지 않습니다.");
         } else {
             TokenResponse tokens = authService.generateTokens(user.getEmail());
-
-            Cookie cookie = getCookie(tokens);
-            LoginResponse loginResponse = new LoginResponse(tokens.getRefreshToken());
-
             saveToken(tokens, user);
 
-            return new ServerLoginResponse(cookie, loginResponse);
+            return new LoginResponse(tokens.getAccessToken(),tokens.getRefreshToken());
         }
     }
 
