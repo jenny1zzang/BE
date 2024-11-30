@@ -3,7 +3,6 @@ package SJUCapstone.BE.auth.controller;
 import SJUCapstone.BE.auth.dto.LoginRequest;
 import SJUCapstone.BE.auth.dto.LoginResponse;
 import SJUCapstone.BE.auth.dto.RegisterRequest;
-import SJUCapstone.BE.auth.dto.ServerLoginResponse;
 import SJUCapstone.BE.auth.exception.InvalidPasswordException;
 import SJUCapstone.BE.auth.exception.UserNotFoundException;
 import SJUCapstone.BE.auth.service.LoginService;
