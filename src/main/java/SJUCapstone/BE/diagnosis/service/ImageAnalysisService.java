@@ -70,35 +70,6 @@ public class ImageAnalysisService {
     /**
      * Process images and get detection results from the model server.
      */
-//    public List<AnalysisResult> processImagesAndGetDetectionResults(List<MultipartFile> images) {
-//        List<AnalysisResult> results = new ArrayList<>();
-//
-//        for (MultipartFile image : images) {
-//            try {
-//                // Step 1: Detect and get analyzed image
-//                byte[] analyzedImage = detectImage(image);
-//
-//                if (analyzedImage != null) {
-//                    // Step 2: Get detection results for the analyzed image
-//                    Map<String, Object> detectionResult = getDetectionResult(analyzedImage);
-//
-//                    if (detectionResult != null) {
-//                        // Create ImageAnalysisResult object
-//                        AnalysisResult analysisResult = new AnalysisResult();
-//                        analysisResult.setAnalyzedImage(analyzedImage);
-//                        analysisResult.setDetectionResult(detectionResult);
-//                        results.add(analysisResult);
-//                    }
-//                }
-//            } catch (IOException e) {
-//                System.err.println("Error reading image file: " + e.getMessage());
-//            } catch (RestClientException e) {
-//                System.err.println("Error processing image: " + e.getMessage());
-//            }
-//        }
-//
-//        return results;
-//    }
     public AnalysisResult processImageAndGetDetectionResult(MultipartFile image) {
         try {
             // Step 1: Detect and get analyzed image
@@ -128,19 +99,6 @@ public class ImageAnalysisService {
     /**
      * Detect an image and return the analyzed image as a byte array.
      */
-//    private byte[] detectImage(MultipartFile image) throws IOException {
-//        String url = MODEL_SERVER_BASE_URL + "/detect/";
-//        HttpEntity<MultiValueMap<String, Object>> requestEntity = createMultipartRequest(List.of(image));
-//
-//        ResponseEntity<byte[]> response = restTemplate.exchange(url, HttpMethod.POST, requestEntity, byte[].class);
-//
-//        if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
-//            return response.getBody();
-//        }
-//
-//        System.err.println("Failed to detect image: " + response.getStatusCode());
-//        return null;
-//    }
     private byte[] detectImage(MultipartFile image) throws IOException {
         String url = MODEL_SERVER_BASE_URL + "/detect/";
         HttpEntity<MultiValueMap<String, Object>> requestEntity = createMultipartRequest(image);
@@ -234,23 +192,6 @@ public class ImageAnalysisService {
     /**
      * Create a multipart request entity for a list of images.
      */
-//    private HttpEntity<MultiValueMap<String, Object>> createMultipartRequest(List<MultipartFile> images) throws IOException {
-//        HttpHeaders headers = new HttpHeaders();
-//        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
-//
-//        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
-//        for (MultipartFile image : images) {
-//            Resource fileResource = new ByteArrayResource(image.getBytes()) {
-//                @Override
-//                public String getFilename() {
-//                    return image.getOriginalFilename();
-//                }
-//            };
-//            body.add("file", fileResource);
-//        }
-//
-//        return new HttpEntity<>(body, headers);
-//    }
     private HttpEntity<MultiValueMap<String, Object>> createMultipartRequest(MultipartFile image) throws IOException {
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
@@ -310,8 +251,6 @@ public class ImageAnalysisService {
      * Upload and analyze images, and return the combined results.
      */
     public Map<String, Object> uploadAndAnalyzeImage(MultipartFile image, Long userId) throws IOException {
-        String imageUrl = s3ImageService.upload(image);
-
         AnalysisResult analysisResult = processImageAndGetDetectionResult(image);
 
         if (analysisResult == null) {
@@ -419,6 +358,37 @@ public class ImageAnalysisService {
 
         return filteredDiseases;
     }
+
+    // 기존 미완료 분석 데이터 삭제
+    public void deleteIncompleteAnalysis(Long userId) {
+        Analysis existingAnalysis = analysisRepository.findByUserIdAndIsComplete(userId, false);
+        if (existingAnalysis != null) {
+            analysisRepository.delete(existingAnalysis);
+        }
+
+
+    }
+
+    // 미완료 분석 데이터가 있는지 확인
+    public boolean hasIncompleteAnalysis(Long userId) {
+        Analysis existingAnalysis = analysisRepository.findByUserIdAndIsComplete(userId, false);
+        return existingAnalysis != null;
+    }
+
+    // 새로운 분석 데이터 저장
+    public void saveNewAnalysisResult(Long userId, Map<String, Object> analysisResult) {
+        Analysis newAnalysis = new Analysis();
+        newAnalysis.setUserId(userId);
+        newAnalysis.setToothDiseases((Map<String, Object>) analysisResult.get("tooth_diseases"));
+        newAnalysis.setGumDiseases((Map<String, Object>) analysisResult.get("gum_diseases"));
+
+        // analyzedImageUrl을 String으로 처리
+        String analyzedImageUrl = (String) analysisResult.get("analyzedImageUrl");
+        newAnalysis.setAnalyzedImageUrls(List.of(analyzedImageUrl));
+
+        analysisRepository.save(newAnalysis);
+    }
+
 
 
 
