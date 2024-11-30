@@ -379,8 +379,8 @@ public class ImageAnalysisService {
     public void saveNewAnalysisResult(Long userId, Map<String, Object> analysisResult) {
         Analysis newAnalysis = new Analysis();
         newAnalysis.setUserId(userId);
-        newAnalysis.setToothDiseases((Map<String, Object>) analysisResult.get("tooth_diseases"));
-        newAnalysis.setGumDiseases((Map<String, Object>) analysisResult.get("gum_diseases"));
+        newAnalysis.setToothDiseases(filterDiseaseData((Map<String, Object>) analysisResult.get("tooth_diseases")));
+        newAnalysis.setGumDiseases(filterDiseaseData((Map<String, Object>) analysisResult.get("gum_diseases")));
 
         // analyzedImageUrl을 String으로 처리
         String analyzedImageUrl = (String) analysisResult.get("analyzedImageUrl");
