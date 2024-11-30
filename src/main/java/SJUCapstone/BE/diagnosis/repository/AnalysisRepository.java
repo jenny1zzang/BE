@@ -9,4 +9,7 @@ public interface AnalysisRepository extends JpaRepository<Analysis, Long> {
     Analysis findByUserId(Long userId);
 
     Analysis findByUserIdAndIsComplete(Long userId, boolean isComplete);
+
+    Analysis findTopByUserIdAndIsCompleteOrderByAnalysisIdDesc(Long userId, boolean isComplete);
+
 }
