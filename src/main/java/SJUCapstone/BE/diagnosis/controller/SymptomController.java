@@ -2,6 +2,7 @@ package SJUCapstone.BE.diagnosis.controller;
 
 import SJUCapstone.BE.auth.service.AuthService;
 import SJUCapstone.BE.diagnosis.model.Analysis;
+import SJUCapstone.BE.diagnosis.model.AnalysisResult;
 import SJUCapstone.BE.diagnosis.model.Diagnosis;
 import SJUCapstone.BE.diagnosis.model.Symptom;
 import SJUCapstone.BE.diagnosis.repository.AnalysisRepository;
@@ -40,78 +41,93 @@ public class SymptomController {
     @Autowired
     DiagnosisService diagnosisService;
 
-    @PostMapping(value = "/initialImageUpload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<?> initialUploadAndDiagnoseImage(@RequestParam(name = "file") MultipartFile image, HttpServletRequest request) {
-        try {
-            // Step 1: 사용자 ID 추출
-            Long userId = authService.getUserId(request);
-            System.out.println("userId = " + userId);
-
-            // Step 2: 기존 미완료 분석 데이터가 있으면 삭제
-            Analysis analysis = analysisRepository.findByUserIdAndIsComplete(userId, false);
-            if (analysis != null) {
-                imageAnalysisService.deleteIncompleteAnalysis(userId);
-            }
-
-            // Step 3: 이미지 판별
-            boolean isMouthImage = imageAnalysisService.isMouthImage(image);
-            if (!isMouthImage) {
-                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("errorCode", "INVALID_IMAGE_TYPE", "message", "The uploaded image is not a valid oral image."));
-            }
-
-            // Step 4: 이미지 업로드 및 분석
-            Map<String, Object> analysisResult = imageAnalysisService.uploadAndAnalyzeImage(image, userId);
-
-            // Step 5: 결과를 데이터베이스에 저장
-            imageAnalysisService.saveNewAnalysisResult(userId, analysisResult);
-
-            // Step 6: 결과 반환
-            return ResponseEntity.ok(analysisResult);
-
-        } catch (IllegalStateException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Image processing failed: " + e.getMessage());
-        }
-    }
+//    @PostMapping(value = "/initialImageUpload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+//    public ResponseEntity<?> initialUploadAndDiagnoseImage(@RequestParam(name = "file") MultipartFile image, HttpServletRequest request) {
+//        try {
+//            // Step 1: 사용자 ID 추출
+//            Long userId = authService.getUserId(request);
+//            System.out.println("userId = " + userId);
+//
+//            // Step 2: 기존 미완료 분석 데이터가 있으면 삭제
+//            Analysis analysis = analysisRepository.findByUserIdAndIsComplete(userId, false);
+//            if (analysis != null) {
+//                imageAnalysisService.deleteIncompleteAnalysis(userId);
+//            }
+//
+//            // Step 3: 이미지 판별
+//            boolean isMouthImage = imageAnalysisService.isMouthImage(image);
+//            if (!isMouthImage) {
+//                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("errorCode", "INVALID_IMAGE_TYPE", "message", "The uploaded image is not a valid oral image."));
+//            }
+//
+//            // Step 4: 이미지 업로드 및 분석
+//            Map<String, Object> analysisResult = imageAnalysisService.uploadAndAnalyzeImage(image, userId);
+//
+//            // Step 5: 결과를 데이터베이스에 저장
+//            imageAnalysisService.saveNewAnalysisResult(userId, analysisResult);
+//
+//            // Step 6: 결과 반환
+//            return ResponseEntity.ok(analysisResult);
+//
+//        } catch (IllegalStateException e) {
+//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
+//        } catch (Exception e) {
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Image processing failed: " + e.getMessage());
+//        }
+//    }
 
     @PostMapping(value = "/imageUpload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<?> uploadAndDiagnoseSingleImage(@RequestParam(name = "file") MultipartFile image, HttpServletRequest request) {
+    public ResponseEntity<?> uploadImage(@RequestParam(name = "file") MultipartFile image) {
         try {
-            // Step 1: 사용자 ID 추출
-            Long userId = authService.getUserId(request);
-            System.out.println("userId = " + userId);
-
-            // Step 2: 이미지 판별
             boolean isMouthImage = imageAnalysisService.isMouthImage(image);
             if (!isMouthImage) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("errorCode", "INVALID_IMAGE_TYPE", "message", "The uploaded image is not a valid oral image."));
             }
-
-            // Step 3: 이미지 업로드 및 분석
-            Map<String, Object> analysisResult = imageAnalysisService.uploadAndAnalyzeImage(image, userId);
-
-            // Step 4: 결과를 데이터베이스에 저장 (기존 분석에 추가)
-            imageAnalysisService.saveAnalysisResult(userId, analysisResult);
-
-            // Step 5: 결과 반환
-            return ResponseEntity.ok(analysisResult);
-
-        } catch (IllegalStateException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
+            return ResponseEntity.ok(Map.of("message", "All images are valid oral images"));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Image processing failed: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(Map.of("errorCode", "SERVER_ERROR", "message", "An error occurred while processing the image."));
         }
     }
+
+//    @PostMapping(value = "/imageUpload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+//    public ResponseEntity<?> uploadAndDiagnoseSingleImage(@RequestParam(name = "file") MultipartFile image, HttpServletRequest request) {
+//        try {
+//            // Step 1: 사용자 ID 추출
+//            Long userId = authService.getUserId(request);
+//            System.out.println("userId = " + userId);
+//
+//            // Step 2: 이미지 판별
+//            boolean isMouthImage = imageAnalysisService.isMouthImage(image);
+//            if (!isMouthImage) {
+//                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Map.of("errorCode", "INVALID_IMAGE_TYPE", "message", "The uploaded image is not a valid oral image."));
+//            }
+//
+//            // Step 3: 이미지 업로드 및 분석
+//            Map<String, Object> analysisResult = imageAnalysisService.uploadAndAnalyzeImage(image, userId);
+//
+//            // Step 4: 결과를 데이터베이스에 저장 (기존 분석에 추가)
+//            imageAnalysisService.saveAnalysisResult(userId, analysisResult);
+//
+//            // Step 5: 결과 반환
+//            return ResponseEntity.ok(analysisResult);
+//
+//        } catch (IllegalStateException e) {
+//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
+//        } catch (Exception e) {
+//            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Image processing failed: " + e.getMessage());
+//        }
+//    }
+
 
 
 
     //    @Operation(summary = "추가 진단 입력할 때 사용할 API(완성", description = "챗봇 api 다 완성되면 수정 예정임!!!!아직 미완!!!")
-    @PostMapping("/submit")
+    @PostMapping(value = "/submit", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> submitSymptom(
             @RequestParam("painLevel") Long painLevel,
             @RequestParam("symptomText") List<String> symptomText,
             @RequestParam("symptomArea") List<String> symptomArea,
+            @RequestParam("file") List<MultipartFile> images,
             HttpServletRequest request) {
         try {
             // 사용자 ID 및 이름 가져오기
@@ -120,7 +136,22 @@ public class SymptomController {
             System.out.println("userId = " + userId);
 
             // Symptom 생성 및 저장
-            Symptom symptom = symptomsService.createSymptom(userId, userName, painLevel, symptomText, symptomArea);
+//            Symptom symptom = symptomsService.createSymptom(userId, userName, painLevel, symptomText, symptomArea);
+
+
+            for (int i = 0; i < images.size(); i++) {
+
+                MultipartFile image = images.get(i);
+
+                Map<String, Object> analysisResult = imageAnalysisService.uploadAndAnalyzeImage(image, userId, painLevel, symptomText, symptomArea);
+                if (analysisResult == null) {
+                    return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to send data to model server.");
+                }
+                System.out.println("analysisResult = " + analysisResult);
+
+                // Step 4: 결과를 데이터베이스에 저장 (기존 분석에 추가)
+                imageAnalysisService.saveAnalysisResult(userId, analysisResult);
+            }
 
             // 진단 정보 조회 (완료되지 않은 진단만)
             Analysis existingDiagnosis = analysisRepository.findByUserIdAndIsComplete(userId, false);
@@ -132,6 +163,7 @@ public class SymptomController {
             Map<String, Object> combinedResults = new HashMap<>();
             combinedResults.put("tooth_diseases", existingDiagnosis.getToothDiseases());
             combinedResults.put("gum_diseases", existingDiagnosis.getGumDiseases());
+            combinedResults.put("etc_diseases", existingDiagnosis.getEtcDiseases());
             combinedResults.put("painLevel", painLevel);
             combinedResults.put("symptomText", symptomText);
             combinedResults.put("symptomArea", symptomArea);
