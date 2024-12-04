@@ -96,7 +96,7 @@ public class Analysis {
 
     public void setEtcDiseases(Map<String, Object> etcDiseases) {
         try {
-            this.toothDiseases = new ObjectMapper().writeValueAsString(etcDiseases);
+            this.etcDiseases = new ObjectMapper().writeValueAsString(etcDiseases);
         } catch (IOException e) {
             throw new RuntimeException("Failed to convert etcDiseases to JSON", e);
         }
