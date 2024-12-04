@@ -10,6 +10,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
@@ -28,6 +29,7 @@ public class ImageAnalysisService {
     private static final String MODEL_SERVER_BASE_URL = "http://222.109.26.240:8000";
 
     private final RestTemplate restTemplate;
+
     @Autowired
     public ImageAnalysisService(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
@@ -70,10 +72,10 @@ public class ImageAnalysisService {
     /**
      * Process images and get detection results from the model server.
      */
-    public AnalysisResult processImageAndGetDetectionResult(MultipartFile image) {
+    public AnalysisResult processImageAndGetDetectionResult(MultipartFile image, Long painLevel, List<String> symptomText, List<String> symptomArea) {
         try {
-            // Step 1: Detect and get analyzed image
-            byte[] analyzedImage = detectImage(image);
+            // Step 1: Detect and get analyzed image along with additional data
+            byte[] analyzedImage = detectImage(image, painLevel, symptomText, symptomArea);
 
             if (analyzedImage != null) {
                 // Step 2: Get detection results for the analyzed image
@@ -99,9 +101,26 @@ public class ImageAnalysisService {
     /**
      * Detect an image and return the analyzed image as a byte array.
      */
-    private byte[] detectImage(MultipartFile image) throws IOException {
+    private byte[] detectImage(MultipartFile image, Long painLevel, List<String> symptomText, List<String> symptomArea) throws IOException {
         String url = MODEL_SERVER_BASE_URL + "/detect/";
-        HttpEntity<MultiValueMap<String, Object>> requestEntity = createMultipartRequest(image);
+
+        // Create a JSON string for the additional data
+        ObjectMapper objectMapper = new ObjectMapper();
+        Map<String, Object> additionalData = new HashMap<>();
+        additionalData.put("painLevel", painLevel);
+        additionalData.put("symptomText", symptomText);
+        additionalData.put("symptomArea", symptomArea);
+        String additionalDataJson = objectMapper.writeValueAsString(additionalData);
+
+        // Prepare the multipart request body
+        MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
+        body.add("file", new MultipartFileResource(image));
+        body.add("additionalData", additionalDataJson);
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.MULTIPART_FORM_DATA);
+
+        HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
 
         ResponseEntity<byte[]> response = restTemplate.exchange(url, HttpMethod.POST, requestEntity, byte[].class);
 
@@ -111,6 +130,26 @@ public class ImageAnalysisService {
 
         System.err.println("Failed to detect image: " + response.getStatusCode());
         return null;
+    }
+
+
+    private static class MultipartFileResource extends InputStreamResource {
+        private final MultipartFile file;
+
+        public MultipartFileResource(MultipartFile file) throws IOException {
+            super(file.getInputStream());
+            this.file = file;
+        }
+
+        @Override
+        public long contentLength() throws IOException {
+            return file.getSize();
+        }
+
+        @Override
+        public String getFilename() {
+            return file.getOriginalFilename();
+        }
     }
 
     /**
@@ -250,8 +289,8 @@ public class ImageAnalysisService {
     /**
      * Upload and analyze images, and return the combined results.
      */
-    public Map<String, Object> uploadAndAnalyzeImage(MultipartFile image, Long userId) throws IOException {
-        AnalysisResult analysisResult = processImageAndGetDetectionResult(image);
+    public Map<String, Object> uploadAndAnalyzeImage(MultipartFile image, Long userId, Long painLevel, List<String> symptomText, List<String> symptomArea) throws IOException {
+        AnalysisResult analysisResult = processImageAndGetDetectionResult(image, painLevel, symptomText, symptomArea);
 
         if (analysisResult == null) {
             throw new IOException("Image processing failed");
@@ -266,7 +305,7 @@ public class ImageAnalysisService {
 //        combinedResults.put("originalImageUrl", imageUrl);
         combinedResults.put("tooth_diseases", analysisResult.getDetectionResult().get("tooth_diseases"));
         combinedResults.put("gum_diseases", analysisResult.getDetectionResult().get("gum_diseases"));
-        combinedResults.put("message", "All images are valid oral images");
+        combinedResults.put("etc_diseases", analysisResult.getDetectionResult().get("etc"));
 
         return combinedResults;
     }
@@ -277,6 +316,7 @@ public class ImageAnalysisService {
     public void saveAnalysisResult(Long userId, Map<String, Object> combinedResults) {
         Map<String, Object> combinedToothDiseases = (Map<String, Object>) combinedResults.get("tooth_diseases");
         Map<String, Object> combinedGumDiseases = (Map<String, Object>) combinedResults.get("gum_diseases");
+        Map<String, Object> combinedEtcDiseases = (Map<String, Object>) combinedResults.get("etc_diseases");
         String analyzedImageUrl = (String) combinedResults.get("analyzedImageUrl");
 
         // 사용자 ID에 대한 기존 미완료 분석 가져오기
@@ -300,6 +340,11 @@ public class ImageAnalysisService {
             mergeDiseaseData(updatedGumDiseases, combinedGumDiseases);
             existingAnalysis.setGumDiseases(updatedGumDiseases); // 병합된 데이터를 다시 설정
 
+            // 잇몸 질병 데이터 병합
+            Map<String, Object> updatedEtcDiseases = existingAnalysis.getEtcDiseases();
+            mergeDiseaseData(updatedEtcDiseases, combinedEtcDiseases);
+            existingAnalysis.setEtcDiseases(updatedEtcDiseases); // 병합된 데이터를 다시 설정
+
             // 분석 결과 저장
             analysisRepository.save(existingAnalysis);
         } else {
@@ -309,6 +354,7 @@ public class ImageAnalysisService {
             // 새로운 분석 데이터 설정
             newAnalysis.setToothDiseases(filterDiseaseData(combinedToothDiseases));
             newAnalysis.setGumDiseases(filterDiseaseData(combinedGumDiseases));
+            newAnalysis.setEtcDiseases(filterDiseaseData(combinedEtcDiseases));
             newAnalysis.setAnalyzedImageUrls(new ArrayList<>(List.of(analyzedImageUrl)));
             newAnalysis.setUserId(userId);
 
@@ -316,6 +362,7 @@ public class ImageAnalysisService {
             analysisRepository.save(newAnalysis);
         }
     }
+
     // 공통 병합 로직: 기존 데이터와 새로운 데이터를 병합
     private void mergeDiseaseData(Map<String, Object> existingDiseases, Map<String, Object> newDiseases) {
         newDiseases.forEach((key, value) -> {
@@ -379,8 +426,8 @@ public class ImageAnalysisService {
     public void saveNewAnalysisResult(Long userId, Map<String, Object> analysisResult) {
         Analysis newAnalysis = new Analysis();
         newAnalysis.setUserId(userId);
-        newAnalysis.setToothDiseases((Map<String, Object>) analysisResult.get("tooth_diseases"));
-        newAnalysis.setGumDiseases((Map<String, Object>) analysisResult.get("gum_diseases"));
+        newAnalysis.setToothDiseases(filterDiseaseData((Map<String, Object>) analysisResult.get("tooth_diseases")));
+        newAnalysis.setGumDiseases(filterDiseaseData((Map<String, Object>) analysisResult.get("gum_diseases")));
 
         // analyzedImageUrl을 String으로 처리
         String analyzedImageUrl = (String) analysisResult.get("analyzedImageUrl");
@@ -388,8 +435,6 @@ public class ImageAnalysisService {
 
         analysisRepository.save(newAnalysis);
     }
-
-
 
 
     /**
