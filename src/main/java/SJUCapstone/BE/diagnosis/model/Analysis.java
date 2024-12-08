@@ -32,11 +32,27 @@ public class Analysis {
     @Column(columnDefinition = "JSON")
     private String gumDiseases;
 
+    @Type(JsonType.class)
+    @Column(columnDefinition = "JSON")
+    private String etcDiseases;
+
 
     @Type(JsonType.class)
     @Column(columnDefinition = "JSON")
     private String analyzedImageUrls;
 
+
+    @Schema(hidden = true)
+    private boolean isComplete = false;
+
+    // getter와 setter 추가
+    public boolean isComplete() {
+        return isComplete;
+    }
+
+    public void setComplete(boolean complete) {
+        isComplete = complete;
+    }
 
     public Map<String, Object> getToothDiseases() {
         try {
@@ -50,7 +66,15 @@ public class Analysis {
         try {
             return new ObjectMapper().readValue(gumDiseases, Map.class);
         } catch (IOException e) {
-            throw new RuntimeException("Failed to convert JSON to toothDiseases", e);
+            throw new RuntimeException("Failed to convert JSON to gumDiseases", e);
+        }
+    }
+
+    public Map<String, Object> getEtcDiseases() {
+        try {
+            return new ObjectMapper().readValue(etcDiseases, Map.class);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to convert JSON to etcDiseases", e);
         }
     }
 
@@ -66,7 +90,15 @@ public class Analysis {
         try {
             this.gumDiseases = new ObjectMapper().writeValueAsString(gumDiseases);
         } catch (IOException e) {
-            throw new RuntimeException("Failed to convert toothDiseases to JSON", e);
+            throw new RuntimeException("Failed to convert gumDiseases to JSON", e);
+        }
+    }
+
+    public void setEtcDiseases(Map<String, Object> etcDiseases) {
+        try {
+            this.etcDiseases = new ObjectMapper().writeValueAsString(etcDiseases);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to convert etcDiseases to JSON", e);
         }
     }
 

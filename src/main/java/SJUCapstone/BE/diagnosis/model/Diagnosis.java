@@ -29,6 +29,8 @@ public class Diagnosis {
     @Schema(hidden = true)
     private String userName; // 회원 이름
 
+    @Type(JsonType.class)
+    private List<String> detectedDiseases;
 
     @Type(JsonType.class)
     @Column(columnDefinition = "JSON")
@@ -42,5 +44,5 @@ public class Diagnosis {
     private String result;
     private String detailed_result;
     private String care_method;
-    private Integer dangerPoint;
+    private int dangerPoint;
 }

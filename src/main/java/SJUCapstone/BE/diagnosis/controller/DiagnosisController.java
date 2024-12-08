@@ -30,22 +30,16 @@ public class DiagnosisController {
     @Autowired
     UserInfoService userInfoService;
 
-    @PostMapping
-    public ResponseEntity<?> createDiagnosis(@RequestBody Diagnosis diagnosis, HttpServletRequest request) {
-        try {
-            Long userId = authService.getUserId(request);
-            Diagnosis createdDiagnosis = diagnosisService.createDiagnoses(diagnosis, userId);
-            return ResponseEntity.ok(createdDiagnosis);
-        } catch (IllegalStateException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
-        }
-    }
-
-    @GetMapping
-    public ResponseEntity<List<Diagnosis>> getAllDiagnosis() {
-        List<Diagnosis> diagnosisList = diagnosisService.getAllDiagnoses();
-        return ResponseEntity.ok(diagnosisList);
-    }
+//    @PostMapping
+//    public ResponseEntity<?> createDiagnosis(@RequestBody Diagnosis diagnosis, HttpServletRequest request) {
+//        try {
+//            Long userId = authService.getUserId(request);
+//            Diagnosis createdDiagnosis = diagnosisService.createDiagnoses(diagnosis, userId);
+//            return ResponseEntity.ok(createdDiagnosis);
+//        } catch (IllegalStateException e) {
+//            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(e.getMessage());
+//        }
+//    }
 
     @GetMapping("/user")
     public ResponseEntity<?> getDiagnosisByUserId(HttpServletRequest request) {
