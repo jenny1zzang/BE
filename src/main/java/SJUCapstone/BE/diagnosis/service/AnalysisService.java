@@ -24,14 +24,14 @@ import java.io.IOException;
 import java.util.*;
 
 @Service
-public class ImageAnalysisService {
+public class AnalysisService {
 
     private static final String MODEL_SERVER_BASE_URL = "http://222.109.26.240:8000";
 
     private final RestTemplate restTemplate;
 
     @Autowired
-    public ImageAnalysisService(RestTemplate restTemplate) {
+    public AnalysisService(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
     }
 
@@ -405,37 +405,6 @@ public class ImageAnalysisService {
 
         return filteredDiseases;
     }
-
-    // 기존 미완료 분석 데이터 삭제
-    public void deleteIncompleteAnalysis(Long userId) {
-        Analysis existingAnalysis = analysisRepository.findByUserIdAndIsComplete(userId, false);
-        if (existingAnalysis != null) {
-            analysisRepository.delete(existingAnalysis);
-        }
-
-
-    }
-
-    // 미완료 분석 데이터가 있는지 확인
-    public boolean hasIncompleteAnalysis(Long userId) {
-        Analysis existingAnalysis = analysisRepository.findByUserIdAndIsComplete(userId, false);
-        return existingAnalysis != null;
-    }
-
-    // 새로운 분석 데이터 저장
-    public void saveNewAnalysisResult(Long userId, Map<String, Object> analysisResult) {
-        Analysis newAnalysis = new Analysis();
-        newAnalysis.setUserId(userId);
-        newAnalysis.setToothDiseases(filterDiseaseData((Map<String, Object>) analysisResult.get("tooth_diseases")));
-        newAnalysis.setGumDiseases(filterDiseaseData((Map<String, Object>) analysisResult.get("gum_diseases")));
-
-        // analyzedImageUrl을 String으로 처리
-        String analyzedImageUrl = (String) analysisResult.get("analyzedImageUrl");
-        newAnalysis.setAnalyzedImageUrls(List.of(analyzedImageUrl));
-
-        analysisRepository.save(newAnalysis);
-    }
-
 
     /**
      * Mark the analysis as complete after submitting the symptom.
