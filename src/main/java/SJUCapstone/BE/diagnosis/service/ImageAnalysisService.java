@@ -75,8 +75,9 @@ public class ImageAnalysisService {
     public AnalysisResult processImageAndGetDetectionResult(MultipartFile image, Long painLevel, List<String> symptomText, List<String> symptomArea) {
         try {
             // Step 1: Detect and get analyzed image along with additional data
+            System.out.println("start :  detectImage");
             byte[] analyzedImage = detectImage(image, painLevel, symptomText, symptomArea);
-
+            System.out.println("end : detectImage");
             if (analyzedImage != null) {
                 // Step 2: Get detection results for the analyzed image
                 Map<String, Object> detectionResult = getDetectionResult(analyzedImage);
@@ -103,7 +104,7 @@ public class ImageAnalysisService {
      */
     private byte[] detectImage(MultipartFile image, Long painLevel, List<String> symptomText, List<String> symptomArea) throws IOException {
         String url = MODEL_SERVER_BASE_URL + "/detect/";
-
+        System.out.println("1구간");
         // Create a JSON string for the additional data
         ObjectMapper objectMapper = new ObjectMapper();
         Map<String, Object> additionalData = new HashMap<>();
@@ -111,23 +112,25 @@ public class ImageAnalysisService {
         additionalData.put("symptomText", symptomText);
         additionalData.put("symptomArea", symptomArea);
         String additionalDataJson = objectMapper.writeValueAsString(additionalData);
-
+        System.out.println("2구간");
         // Prepare the multipart request body
         MultiValueMap<String, Object> body = new LinkedMultiValueMap<>();
         body.add("file", new MultipartFileResource(image));
         body.add("additionalData", additionalDataJson);
-
+        System.out.println("3구간");
+        System.out.println(additionalDataJson);
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.MULTIPART_FORM_DATA);
 
         HttpEntity<MultiValueMap<String, Object>> requestEntity = new HttpEntity<>(body, headers);
 
         ResponseEntity<byte[]> response = restTemplate.exchange(url, HttpMethod.POST, requestEntity, byte[].class);
-
+        System.out.println("response");
+        System.out.println("4구간");
         if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
             return response.getBody();
         }
-
+        System.out.println("5구간");
         System.err.println("Failed to detect image: " + response.getStatusCode());
         return null;
     }
@@ -290,6 +293,7 @@ public class ImageAnalysisService {
      * Upload and analyze images, and return the combined results.
      */
     public Map<String, Object> uploadAndAnalyzeImage(MultipartFile image, Long userId, Long painLevel, List<String> symptomText, List<String> symptomArea) throws IOException {
+        System.out.println("start : processImageAndGetDetectionResult");
         AnalysisResult analysisResult = processImageAndGetDetectionResult(image, painLevel, symptomText, symptomArea);
 
         if (analysisResult == null) {
