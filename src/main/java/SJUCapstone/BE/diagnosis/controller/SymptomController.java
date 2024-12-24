@@ -1,10 +1,9 @@
 package SJUCapstone.BE.diagnosis.controller;
 
+import SJUCapstone.BE.auth.dto.SubmitRequest;
 import SJUCapstone.BE.auth.service.AuthService;
 import SJUCapstone.BE.diagnosis.model.Analysis;
-import SJUCapstone.BE.diagnosis.model.AnalysisResult;
 import SJUCapstone.BE.diagnosis.model.Diagnosis;
-import SJUCapstone.BE.diagnosis.model.Symptom;
 import SJUCapstone.BE.diagnosis.repository.AnalysisRepository;
 import SJUCapstone.BE.diagnosis.service.DiagnosisService;
 import SJUCapstone.BE.diagnosis.service.ImageAnalysisService;
@@ -142,11 +141,12 @@ public class SymptomController {
             for (int i = 0; i < images.size(); i++) {
 
                 MultipartFile image = images.get(i);
-
+                System.out.println("start upladAndAnalyzeImage");
                 Map<String, Object> analysisResult = imageAnalysisService.uploadAndAnalyzeImage(image, userId, painLevel, symptomText, symptomArea);
                 if (analysisResult == null) {
                     return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to send data to model server.");
                 }
+                System.out.println("start upladAndAnalyzeImage");
                 System.out.println("analysisResult = " + analysisResult);
 
                 // Step 4: 결과를 데이터베이스에 저장 (기존 분석에 추가)
