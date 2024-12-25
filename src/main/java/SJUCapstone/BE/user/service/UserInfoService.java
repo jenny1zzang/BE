@@ -42,4 +42,8 @@ public class UserInfoService {
 
     }
 
+    public void updateUserImage(Long userId, String imageURL) {
+        userInfoRepository.updateUserProfileImageById(userId, imageURL);
+    }
+
 }
