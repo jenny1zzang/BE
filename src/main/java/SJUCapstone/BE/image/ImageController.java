@@ -1,6 +1,7 @@
 package SJUCapstone.BE.image;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -10,13 +11,13 @@ public class ImageController {
     @Autowired
     S3ImageService s3ImageService;
 
-    @PostMapping("/s3/upload")
+    @PostMapping(value = "/s3/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> s3Upload(@RequestPart(value = "image", required = false) MultipartFile image) {
-        String profileImage = s3ImageService.upload(image);
-        return ResponseEntity.ok(profileImage);
+        String profileImageURL = s3ImageService.upload(image);
+        return ResponseEntity.ok(profileImageURL);
     }
 
-    @GetMapping("/s3/delete")
+    @GetMapping(value = "/s3/delete", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> s3delete(@RequestParam("addr") String addr) {
         s3ImageService.deleteImageFromS3(addr);
         return ResponseEntity.ok(null);
