@@ -34,5 +34,4 @@ public class SwaggerConfig {
                 .addSecurityItem(securityRequirement)
                 .info(new Info().title("API Documentation").version("1.0"));
     }
-
 }
