@@ -30,7 +30,7 @@ E4U 서비스 링크를 클릭해서 직접 실행해보실 수 있습니다 <br
 
 | <img src="https://avatars.githubusercontent.com/u/113101019?v=4" width="100" height="100"/> | <img src="https://avatars.githubusercontent.com/u/108577676?v=4" width="100" height="100"/> | <img src="https://avatars.githubusercontent.com/u/63639963?v=4" width="100" height="100"/> | <img src="https://avatars.githubusercontent.com/u/80903685?v=4" width="100" height="100"/> |
 |:-------------------------------------------------------------------------------------------:|:-------------------------------------------------------------------------------------------:|:------------------------------------------------------------------------------------------:|:------------------------------------------------------------------------------------------:|
-|                       AI<br/>이규섭 <br>[@9sub](https://github.com/9sub)                       |                  BE<br/>김해린 [@jenny1zzang](https://github.com/jenny1zzang)                  |                    BE<br/>한경준 [@hkjbrian](https://github.com/hkjbrian)                     |                      FE<br/>강은우 [@euoonw](https://github.com/euoonw)                       |
+|                       AI<br/>이규섭 <br>[@9sub](https://github.com/9sub)                       |                  BE<br/>김해린 <br>[@jenny1zzang](https://github.com/jenny1zzang)                  |                    BE<br/>한경준 <br/>[@hkjbrian](https://github.com/hkjbrian)                     |                      FE<br/>강은우 <br/>[@euoonw](https://github.com/euoonw)                       |
 
 
 
