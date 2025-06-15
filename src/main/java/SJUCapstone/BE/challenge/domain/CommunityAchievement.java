@@ -8,21 +8,19 @@ import lombok.Data;
 
 @Entity
 @Data
-public class CommunityChallenge {
+public class CommunityAchievement {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long communityChallengeId;
+    private Long achievementId;
 
     private Long communityId;
     private Long challengeId;
-    private String status;
 
-    public CommunityChallenge() {}
+    public CommunityAchievement() {}
 
-    public CommunityChallenge(Long communityId, Long challengeId) {
+    public CommunityAchievement(Long communityId, Long challengeId) {
         this.communityId = communityId;
         this.challengeId = challengeId;
-        this.status = "PENDING"; // 기본 상태
     }
 }

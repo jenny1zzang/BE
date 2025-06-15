@@ -16,8 +16,8 @@ public class SwaggerConfig {
     public OpenAPI customOpenAPI() {
         Server server = new Server();
 
-//        server.setUrl("http://localhost:8080"); // 로컬 서버
-        server.setUrl("https://e4u.kro.kr"); // 배포 서버 HTTPS 프로토콜 사용
+        server.setUrl("http://localhost:8080"); // 로컬 서버
+//        server.setUrl("https://e4u.kro.kr"); // 배포 서버 HTTPS 프로토콜 사용
         server.setDescription("Production Server");
 
         SecurityScheme securityScheme = new SecurityScheme()

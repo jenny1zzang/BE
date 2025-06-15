@@ -15,11 +15,6 @@ public class ChallengeController {
     @Autowired
     private ChallengeService challengeService;
 
-
-    @Operation(
-            summary = "커뮤니티에 챌린지 추가",
-            description = "지정된 커뮤니티에 챌린지를 추가합니다. 요청 본문에는 커뮤니티 ID와 추가하려는 챌린지 ID가 필요합니다. 챌린지 ID는 /admin/challenge/list를 통해 조회 가능합니다."
-    )
     @PostMapping("/add")
     public ResponseEntity<?> addChallenge(@RequestBody AddChallengeRequest request) {
         try {
@@ -30,11 +25,6 @@ public class ChallengeController {
         }
     }
 
-
-    @Operation(
-            summary = "커뮤니티에서 챌린지 삭제",
-            description = "지정된 커뮤니티에 연결된 챌린지를 삭제합니다. URL 경로에서 communityChallengeId를 전달해야 합니다."
-    )
     @DeleteMapping("/delete/{communityChallengeId}")
     public ResponseEntity<?> deleteChallenge(@PathVariable Long communityChallengeId) {
         try {
@@ -45,10 +35,6 @@ public class ChallengeController {
         }
     }
 
-    @Operation(
-            summary = "특정 커뮤니티의 챌린지 조회",
-            description = "특정 communityId에 속한 모든 챌린지와 관련 정보를 반환"
-    )
     @GetMapping("/list/{communityId}")
     public ResponseEntity<?> getCommunityChallenges(@PathVariable Long communityId) {
         try {
@@ -58,4 +44,50 @@ public class ChallengeController {
         }
     }
 
+    @PostMapping("/success/{communityChallengeId}")
+    public ResponseEntity<?> markChallengeSuccess(
+            @PathVariable Long communityChallengeId
+    ) {
+        try {
+            challengeService.markChallengeSuccess(communityChallengeId);
+            return ResponseEntity.ok().body("챌린지가 성공적으로 완료되었습니다.");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/fail/{communityChallengeId}")
+    public ResponseEntity<?> markChallengeFail(
+            @PathVariable Long communityChallengeId
+    ) {
+        try {
+            challengeService.markChallengeFail(communityChallengeId);
+            return ResponseEntity.ok().body("챌린지가 실패로 처리되었습니다.");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @GetMapping("/achievements/{communityId}")
+    public ResponseEntity<?> getAchievements(
+            @PathVariable Long communityId
+    ) {
+        try {
+            return ResponseEntity.ok(challengeService.getAchievementsByCommunity(communityId));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/restart/{communityChallengeId}")
+    public ResponseEntity<?> restartChallenge(
+            @PathVariable Long communityChallengeId
+    ) {
+        try {
+            challengeService.restartChallenge(communityChallengeId);
+            return ResponseEntity.ok().body("챌린지가 다시 시작되었습니다.");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
 }
